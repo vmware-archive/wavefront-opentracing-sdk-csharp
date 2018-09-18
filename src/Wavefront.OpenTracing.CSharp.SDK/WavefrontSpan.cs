@@ -14,7 +14,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK
     public class WavefrontSpan : ISpan
     {
         private readonly WavefrontTracer tracer;
-        private readonly DateTimeOffset startTimestamp;
+        private readonly DateTime startTimestampUtc;
         private readonly IList<KeyValuePair<string, string>> tags;
         private readonly IList<Reference> parents;
         private readonly IList<Reference> follows;
@@ -26,13 +26,13 @@ namespace Wavefront.OpenTracing.CSharp.SDK
 
         internal WavefrontSpan(
             WavefrontTracer tracer, string operationName, WavefrontSpanContext spanContext,
-            DateTimeOffset startTimestamp, IList<Reference> parents, IList<Reference> follows,
+            DateTime startTimestampUtc, IList<Reference> parents, IList<Reference> follows,
             IList<KeyValuePair<string, string>> tags)
         {
             this.tracer = tracer;
             this.operationName = operationName;
             this.spanContext = spanContext;
-            this.startTimestamp = startTimestamp;
+            this.startTimestampUtc = startTimestampUtc;
             this.parents = parents;
             this.follows = follows;
             this.tags = tags;
@@ -175,7 +175,12 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         /// <inheritdoc />
         public void Finish(DateTimeOffset finishTimestamp)
         {
-            DoFinish(finishTimestamp - startTimestamp);
+            Finish(finishTimestamp.UtcDateTime);
+        }
+
+        private void Finish(DateTime finishTimestampUtc)
+        {
+            DoFinish(finishTimestampUtc - startTimestampUtc);
         }
 
         private void DoFinish(TimeSpan duration)
@@ -208,7 +213,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         /// <returns>The start timestamp in milliseconds.</returns>
         public long GetStartTimeMillis()
         {
-            return startTimestamp.ToUnixTimeMilliseconds();
+            return ((DateTimeOffset)startTimestampUtc).ToUnixTimeMilliseconds();
         }
 
         /// <summary>
@@ -287,7 +292,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         {
             return "WavefrontSpan{" +
                 "operationName='" + operationName + '\'' +
-                ", startTimestamp=" + startTimestamp +
+                ", startTimestampUtc=" + startTimestampUtc +
                 ", duration=" + duration +
                 ", tags=" + tags +
                 ", spanContext=" + spanContext +

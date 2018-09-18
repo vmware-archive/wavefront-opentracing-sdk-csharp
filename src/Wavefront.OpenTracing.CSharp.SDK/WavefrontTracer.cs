@@ -203,9 +203,9 @@ namespace Wavefront.OpenTracing.CSharp.SDK
             }
         }
 
-        internal DateTimeOffset CurrentTimestamp()
+        internal DateTime CurrentTimestamp()
         {
-            return DateTimeOffset.UtcNow;
+            return DateTime.UtcNow;
         }
 
         /// <summary>

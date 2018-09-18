@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using OpenTracing;
 using OpenTracing.Tag;
-using static OpenTracing.Mock.MockSpan;
 
 namespace Wavefront.OpenTracing.CSharp.SDK
 {
@@ -26,7 +25,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         // The list of follows from references.
         private IList<Reference> follows;
 
-        private DateTimeOffset? startTimestamp;
+        private DateTime? startTimestampUtc;
 
         private bool ignoreActiveSpan;
 
@@ -152,7 +151,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         /// <inheritdoc />
         public ISpanBuilder WithStartTimestamp(DateTimeOffset timestamp)
         {
-            startTimestamp = timestamp;
+            startTimestampUtc = timestamp.UtcDateTime;
             return this;
         }
 
@@ -171,9 +170,9 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         /// <inheritdoc />
         public ISpan Start()
         {
-            if (!startTimestamp.HasValue)
+            if (!startTimestampUtc.HasValue)
             {
-                startTimestamp = tracer.CurrentTimestamp();
+                startTimestampUtc = tracer.CurrentTimestamp();
             }
             var globalTags = tracer.Tags;
             if (globalTags != null && globalTags.Count > 0)
@@ -181,8 +180,8 @@ namespace Wavefront.OpenTracing.CSharp.SDK
                 tags.AddRange(globalTags);
             }
             var context = CreateSpanContext();
-            return new WavefrontSpan(tracer, operationName, context, startTimestamp.Value, parents,
-                                     follows, tags);
+            return new WavefrontSpan(tracer, operationName, context, startTimestampUtc.Value,
+                                     parents, follows, tags);
         }
 
         private WavefrontSpanContext CreateSpanContext()
