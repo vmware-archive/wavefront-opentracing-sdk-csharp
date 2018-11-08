@@ -3,9 +3,13 @@ using System.Threading.Tasks;
 using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
+using Wavefront.OpenTracing.SDK.CSharp.Reporting;
+using Wavefront.SDK.CSharp.Common.Application;
 using Xunit;
+using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
+using static Wavefront.SDK.CSharp.Common.Constants;
 
-namespace Wavefront.OpenTracing.CSharp.SDK.Test
+namespace Wavefront.OpenTracing.SDK.CSharp.Test
 {
     /// <summary>
     ///     Unit tests for <see cref="WavefrontTracer"/>.
@@ -15,7 +19,9 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Test
         [Fact]
         public void TestInjectExtract()
         {
-            var tracer = new WavefrontTracer.Builder().Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Build();
 
             var span = tracer.BuildSpan("testOp").Start();
             Assert.NotNull(span);
@@ -38,7 +44,9 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Test
         [Fact]
         public void TestActiveSpan()
         {
-            var tracer = new WavefrontTracer.Builder().Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Build();
             var scope = tracer.BuildSpan("testOp").StartActive();
             var span = tracer.ActiveSpan;
             Assert.NotNull(span);
@@ -46,51 +54,89 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Test
         }
 
         [Fact]
-        public void TestGlobalTags()
+        public void TestApplicationTags()
         {
-            var tracer = new WavefrontTracer.Builder()
-                                            .WithGlobalTag("foo", "bar")
-                                            .Build();
+            var customTags = new Dictionary<string, string>
+            {
+                { "customTag1", "customValue1" },
+                { "customTag2", "customValue2" }
+            };
+            var applicationTags =
+                new ApplicationTags.Builder("myApplication", "myServDefaultSource")
+                                   .Cluster("myCluster")
+                                   .Shard("myShard")
+                                   .CustomTags(customTags)
+                                   .Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), applicationTags)
+                .Build();
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
             Assert.NotNull(span);
-            Assert.NotNull(span.GetTagsAsMap());
-            Assert.Equal(1, span.GetTagsAsMap().Count);
-            Assert.Contains("bar", span.GetTagsAsMap()["foo"]);
+            var spanTags = span.GetTagsAsMap();
+            Assert.NotNull(spanTags);
+            Assert.Equal(6, spanTags.Count);
+            Assert.Contains(applicationTags.Application, spanTags[ApplicationTagKey]);
+            Assert.Contains(applicationTags.Service, spanTags[ServiceTagKey]);
+            Assert.Contains(applicationTags.Cluster, spanTags[ClusterTagKey]);
+            Assert.Contains(applicationTags.Shard, spanTags[ShardTagKey]);
+            Assert.Contains("customValue1", spanTags["customTag1"]);
+            Assert.Contains("customValue2", spanTags["customTag2"]);
+        }
+
+        [Fact]
+        public void TestGlobalTags()
+        {
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithGlobalTag("foo", "bar")
+                .Build();
+            var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
+            Assert.NotNull(span);
+            var spanTags = span.GetTagsAsMap();
+            Assert.NotNull(spanTags);
+            Assert.Equal(5, spanTags.Count);
+            Assert.Contains("bar", spanTags["foo"]);
 
             var tags = new Dictionary<string, string>{ {"foo1", "bar1"}, {"foo2", "bar2"} };
-            tracer = new WavefrontTracer.Builder()
-                                        .WithGlobalTags(tags)
-                                        .Build();
+            tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithGlobalTags(tags)
+                .Build();
             span = (WavefrontSpan)tracer.BuildSpan("testOp")
                                         .WithTag("foo3", "bar3")
                                         .Start();
             Assert.NotNull(span);
-            Assert.NotNull(span.GetTagsAsMap());
-            Assert.Equal(3, span.GetTagsAsMap().Count);
-            Assert.Contains("bar1", span.GetTagsAsMap()["foo1"]);
-            Assert.Contains("bar2", span.GetTagsAsMap()["foo2"]);
-            Assert.Contains("bar3", span.GetTagsAsMap()["foo3"]);
+            spanTags = span.GetTagsAsMap();
+            Assert.NotNull(spanTags);
+            Assert.Equal(7, spanTags.Count);
+            Assert.Contains("bar1", spanTags["foo1"]);
+            Assert.Contains("bar2", spanTags["foo2"]);
+            Assert.Contains("bar3", spanTags["foo3"]);
         }
 
         [Fact]
         public void TestGlobalMultiValuedTags()
         {
-            var tracer = new WavefrontTracer.Builder()
-                                            .WithGlobalTag("key1", "value1")
-                                            .WithGlobalTag("key1", "value2")
-                                            .Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithGlobalTag("key1", "value1")
+                .WithGlobalTag("key1", "value2")
+                .Build();
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
             Assert.NotNull(span);
-            Assert.NotNull(span.GetTagsAsMap());
-            Assert.Equal(1, span.GetTagsAsMap().Count);
-            Assert.Contains("value1", span.GetTagsAsMap()["key1"]);
-            Assert.Contains("value2", span.GetTagsAsMap()["key1"]);
+            var spanTags = span.GetTagsAsMap();
+            Assert.NotNull(spanTags);
+            Assert.Equal(5, spanTags.Count);
+            Assert.Contains("value1", spanTags["key1"]);
+            Assert.Contains("value2", spanTags["key1"]);
         }
 
         [Fact]
         public async Task TestActiveSpanReplacement()
         {
-            var tracer = new WavefrontTracer.Builder().Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Build();
 
             // Start an isolated task and query for its result in another task/thread
             ISpan initialSpan = tracer.BuildSpan("initial").Start();
@@ -149,7 +195,9 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Test
         [Fact]
         public async Task TestLateSpanFinish()
         {
-            var tracer = new WavefrontTracer.Builder().Build();
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Build();
 
             // Create a Span manually and use it as parent of a pair of subtasks
             var parentSpan = tracer.BuildSpan("parent").Start();
@@ -221,6 +269,11 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Test
         private static long FinishTimeMillis(WavefrontSpan span)
         {
             return span.GetStartTimeMillis() + span.GetDurationMillis();
+        }
+
+        private static ApplicationTags BuildApplicationTags()
+        {
+            return new ApplicationTags.Builder("myApplication", "myService").Build();
         }
     }
 }

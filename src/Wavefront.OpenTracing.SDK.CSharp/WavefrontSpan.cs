@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using OpenTracing;
 using OpenTracing.Tag;
 
-namespace Wavefront.OpenTracing.CSharp.SDK
+namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     Represents a thread-safe Wavefront trace span based on OpenTracing's

@@ -3,9 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Wavefront.CSharp.SDK.Common;
+using Wavefront.SDK.CSharp.Common;
+using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 
-namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
+namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
     /// <summary>
     ///     Reporter that reports tracing spans to Wavefront via <see cref="IWavefrontSender"/>.
@@ -30,7 +31,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
             /// </summary>
             public Builder()
             {
-                this.source = GetDefaultSource();
+                source = GetDefaultSource();
             }
 
             private static string GetDefaultSource()
@@ -41,7 +42,7 @@ namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
                 }
                 catch (Exception)
                 {
-                    return "wavefront-tracer-reporter";
+                    return DefaultSource;
                 }
             }
 

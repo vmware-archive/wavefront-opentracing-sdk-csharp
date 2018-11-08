@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using Wavefront.CSharp.SDK.Common;
+using Wavefront.SDK.CSharp.Common;
 
-namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
+namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
     public class ConsoleReporter : IReporter
     {

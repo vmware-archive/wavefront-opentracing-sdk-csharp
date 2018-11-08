@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
-using Wavefront.CSharp.SDK.Common;
-using Wavefront.OpenTracing.CSharp.SDK.Propagation;
-using Wavefront.OpenTracing.CSharp.SDK.Reporting;
+using Wavefront.SDK.CSharp.Common;
+using Wavefront.OpenTracing.SDK.CSharp.Propagation;
+using Wavefront.OpenTracing.SDK.CSharp.Reporting;
+using Wavefront.SDK.CSharp.Common.Application;
+using static Wavefront.SDK.CSharp.Common.Constants;
 
-namespace Wavefront.OpenTracing.CSharp.SDK
+namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     The Wavefront OpenTracing tracer for sending distributed traces to Wavefront.
@@ -28,27 +29,22 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         /// </summary>
         public class Builder
         {
-            private string source;
-            private IReporter reporter;
-            private readonly List<KeyValuePair<string, string>> tags;
+            private readonly IReporter reporter;
+            private readonly ApplicationTags applicationTags;
+            private readonly IList<KeyValuePair<string, string>> tags;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
             /// </summary>
-            public Builder()
+            /// <param name="reporter">The reporter to report tracing spans with.</param>
+            /// <param name="applicationTags">
+            ///     Tags containing metadata about the application.
+            /// </param>
+            public Builder(IReporter reporter, ApplicationTags applicationTags)
             {
+                this.reporter = reporter;
+                this.applicationTags = applicationTags;
                 tags = new List<KeyValuePair<string, string>>();
-            }
-
-            /// <summary>
-            ///     Sets the source attributed to reported spans.
-            /// </summary>
-            /// <returns><see cref="this"/></returns>
-            /// <param name="source">The source string.</param>
-            public Builder WithSource(string source)
-            {
-                this.source = source;
-                return this;
             }
 
             /// <summary>
@@ -103,15 +99,13 @@ namespace Wavefront.OpenTracing.CSharp.SDK
                 return this;
             }
 
-            /// <summary>
-            ///     Sets the reporter for this tracer.
-            /// </summary>
-            /// <returns><see cref="this"/></returns>
-            /// <param name="reporter">The reporter for this tracer.</param>
-            public Builder WithReporter(IReporter reporter)
+            private void WithApplicationTags(ApplicationTags applicationTags)
             {
-                this.reporter = reporter;
-                return this;
+                WithGlobalTag(ApplicationTagKey, applicationTags.Application);
+                WithGlobalTag(ServiceTagKey, applicationTags.Service);
+                WithGlobalTag(ClusterTagKey, applicationTags.Cluster ?? NullTagValue);
+                WithGlobalTag(ShardTagKey, applicationTags.Shard ?? NullTagValue);
+                WithGlobalTags(applicationTags.CustomTags);
             }
 
             /// <summary>
@@ -121,27 +115,8 @@ namespace Wavefront.OpenTracing.CSharp.SDK
             /// <returns>A <see cref="WavefrontTracer"/>.</returns>
             public WavefrontTracer Build()
             {
-                if (string.IsNullOrEmpty(source))
-                {
-                    source = GetDefaultSource();
-                }
-                if (reporter == null)
-                {
-                    reporter = new ConsoleReporter(source);
-                }
+                WithApplicationTags(applicationTags);
                 return new WavefrontTracer(reporter, tags);
-            }
-
-            private static string GetDefaultSource()
-            {
-                try
-                {
-                    return Dns.GetHostEntry("LocalHost").HostName;
-                }
-                catch (Exception)
-                {
-                    return "wavefront-tracer";
-                }
             }
         }
 

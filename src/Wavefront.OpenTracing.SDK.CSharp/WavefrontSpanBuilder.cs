@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using OpenTracing;
 using OpenTracing.Tag;
 
-namespace Wavefront.OpenTracing.CSharp.SDK
+namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     The class used for building <see cref="WavefrontSpan"/> in accordance with the

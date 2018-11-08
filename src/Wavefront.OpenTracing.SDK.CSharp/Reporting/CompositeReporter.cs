@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
+namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
     /// <summary>
     ///     Reporter that delegates to multiple other reporters for reporting.

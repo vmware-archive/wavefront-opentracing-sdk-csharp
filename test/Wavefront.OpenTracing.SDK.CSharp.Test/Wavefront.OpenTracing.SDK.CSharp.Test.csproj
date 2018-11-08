@@ -13,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Wavefront.OpenTracing.CSharp.SDK\Wavefront.OpenTracing.CSharp.SDK.csproj" />
+    <ProjectReference Include="..\..\src\Wavefront.OpenTracing.SDK.CSharp\Wavefront.OpenTracing.SDK.CSharp.csproj" />
   </ItemGroup>
 </Project>
