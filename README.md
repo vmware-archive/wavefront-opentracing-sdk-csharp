@@ -31,7 +31,7 @@ An `IWavefrontSender` object implements the low-level interface for sending data
 
 * See [Set Up an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/README.md#set-up-an-iwavefrontsender) for details on instantiating a proxy or direct ingestion client.
 
-**Note:** If you are using multiple Wavefront C# SDKs, see [Sharing an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/sender.md) for information about sharing a single `IWavefrontSender` instance across SDKs.
+**Note:** If you are using multiple Wavefront C# SDKs, see [Sharing an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/docs/sender.md) for information about sharing a single `IWavefrontSender` instance across SDKs.
 
 ### 3. Reporter
 You must create a `WavefrontSpanReporter` to report trace data to Wavefront. You can optionally create a `CompositeReporter` to send data to Wavefront and to print to the console.
@@ -46,7 +46,7 @@ To create a `WavefrontSpanReporter`:
 IWavefrontSender sender = BuildWavefrontSender(); // pseudocode; see above
 
 IReporter wfSpanReporter = new WavefrontSpanReporter.Builder()
-  .WithSource("wavefront-tracing-example"). // optional nondefault source name
+  .WithSource("wavefront-tracing-example") // optional nondefault source name
   .Build(sender);
 
 //  To get the number of failures observed while reporting
@@ -123,5 +123,5 @@ Extract the propagated span context on receiving a HTTP request:
 ```csharp
 ITextMap carrier = new TextMapExtractAdapter(new Dictionary<string, string>());
 ISpanContext ctx = tracer.Extract(BuiltinFormats.HttpHeaders, carrier);
-ISpan receivingSpan = tracer.BuildSpan("httpRequestOperationName").AsChildOf(ctx).StartActive(true);
+IScope receivingScope = tracer.BuildSpan("httpRequestOperationName").AsChildOf(ctx).StartActive(true);
 ```
