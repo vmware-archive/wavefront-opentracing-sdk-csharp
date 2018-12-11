@@ -6,9 +6,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavefront.OpenTracing.CSharp.SDK", "src\Wavefront.OpenTracing.CSharp.SDK\Wavefront.OpenTracing.CSharp.SDK.csproj", "{53BC9827-8582-4185-A50F-2422355C151E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavefront.OpenTracing.SDK.CSharp", "src\Wavefront.OpenTracing.SDK.CSharp\Wavefront.OpenTracing.SDK.CSharp.csproj", "{53BC9827-8582-4185-A50F-2422355C151E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavefront.OpenTracing.CSharp.SDK.Test", "test\Wavefront.OpenTracing.CSharp.SDK.Test\Wavefront.OpenTracing.CSharp.SDK.Test.csproj", "{1105339A-431D-45AF-A929-21D35F1E167F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavefront.OpenTracing.SDK.CSharp.Test", "test\Wavefront.OpenTracing.SDK.CSharp.Test\Wavefront.OpenTracing.SDK.CSharp.Test.csproj", "{1105339A-431D-45AF-A929-21D35F1E167F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

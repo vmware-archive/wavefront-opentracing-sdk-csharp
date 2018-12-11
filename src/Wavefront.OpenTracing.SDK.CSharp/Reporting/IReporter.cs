@@ -1,4 +1,4 @@
-﻿namespace Wavefront.OpenTracing.CSharp.SDK.Reporting
+﻿namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
     /// <summary>
     ///     Interface for reporting finished spans.

@@ -1,4 +1,4 @@
-﻿namespace Wavefront.OpenTracing.CSharp.SDK.Propagation
+﻿namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
 {
     /// <summary>
     ///     Propagate contexts within HTTP headers.

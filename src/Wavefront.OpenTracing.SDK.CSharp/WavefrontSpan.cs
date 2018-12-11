@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using OpenTracing;
 using OpenTracing.Tag;
 
-namespace Wavefront.OpenTracing.CSharp.SDK
+namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     Represents a thread-safe Wavefront trace span based on OpenTracing's
@@ -98,7 +98,14 @@ namespace Wavefront.OpenTracing.CSharp.SDK
         {
             if (!string.IsNullOrEmpty(key) && value != null)
             {
-                tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                if (value is bool)
+                {
+                    tags.Add(new KeyValuePair<string, string>(key, (bool)value ? "true" : "false"));
+                }
+                else
+                {
+                    tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                }
             }
             return this;
         }

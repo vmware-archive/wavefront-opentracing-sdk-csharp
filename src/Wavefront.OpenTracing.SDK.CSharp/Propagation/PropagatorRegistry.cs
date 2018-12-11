@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using OpenTracing.Propagation;
 
-namespace Wavefront.OpenTracing.CSharp.SDK.Propagation
+namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
 {
     /// <summary>
     ///     Registry of available propagators.

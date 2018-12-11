@@ -1,4 +1,4 @@
-﻿namespace Wavefront.OpenTracing.CSharp.SDK
+﻿namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     Represents a parent context reference.

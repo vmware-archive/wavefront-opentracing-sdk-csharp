@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using OpenTracing;
 
-namespace Wavefront.OpenTracing.CSharp.SDK
+namespace Wavefront.OpenTracing.SDK.CSharp
 {
     /// <summary>
     ///     Represents a Wavefront span context based on OpenTracing's <see cref="ISpanContext"/>. 

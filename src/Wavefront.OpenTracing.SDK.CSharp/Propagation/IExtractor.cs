@@ -1,4 +1,4 @@
-﻿namespace Wavefront.OpenTracing.CSharp.SDK.Propagation
+﻿namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
 {
     /// <summary>
     ///     Interface for extracting span contexts from carriers.
