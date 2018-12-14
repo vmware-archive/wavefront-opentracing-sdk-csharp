@@ -1,4 +1,4 @@
-# Wavefront by VMware Opentracing SDK for C#
+# wavefront-opentracing-sdk-csharp [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 
 This .NET library provides open tracing support for Wavefront.
 
