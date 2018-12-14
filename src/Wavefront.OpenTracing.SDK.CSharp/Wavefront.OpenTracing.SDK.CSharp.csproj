@@ -8,9 +8,9 @@
     <Title>Wavefront by VMware Opentracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
-    <PackageLicenseUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-java/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-java</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-java</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
     <PackageTags>Wavefront;VMware;opentracing;tracing</PackageTags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
