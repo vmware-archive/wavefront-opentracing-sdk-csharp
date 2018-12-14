@@ -1,27 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.1.1</PackageVersion>
+    <NoWarn>NU1701</NoWarn>
+    <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
+    <PackageVersion>1.0</PackageVersion>
+    <Title>Wavefront by VMware Opentracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
-    <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
+    <PackageLicenseUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
+    <PackageTags>Wavefront;VMware;opentracing;tracing</PackageTags>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="Common\" />
     <Folder Include="Propagation\" />
     <Folder Include="Reporting\" />
-    <Folder Include="Common\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
     <PackageReference Include="OpenTracing" Version="0.12.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
-    <PackageReference Include="Wavefront.SDK.CSharp" Version="0.1.0" />
+    <PackageReference Include="Wavefront.SDK.CSharp" Version="1.0.0" />
   </ItemGroup>
 </Project>

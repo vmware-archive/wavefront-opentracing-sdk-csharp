@@ -1,11 +1,11 @@
-# Wavefront OpenTracing C# SDK
+# Wavefront by VMware Opentracing SDK for C#
 
 This .NET library provides open tracing support for Wavefront.
 
 ## Dependencies
   * .NET Standard (>= 2.0)
   * OpenTracing (>= 0.12.0)
-  * Wavefront.SDK.CSharp (>= 0.1.0) ([Github repo](https://github.com/wavefrontHQ/wavefront-sdk-csharp/tree/han/refactoring-and-aspnetcore-updates))
+  * Wavefront.SDK.CSharp (>= 1.0) ([NuGet](https://www.nuget.org/packages/Wavefront.SDK.CSharp/))
 
 ## Set Up a Tracer
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.
@@ -23,15 +23,15 @@ For the details of each step, see the sections below.
 Application tags determine the metadata (span tags) that are included with every span reported to Wavefront. These tags enable you to filter and query trace data in Wavefront.
 
 You encapsulate application tags in an `ApplicationTags` object.
-See [Instantiating ApplicationTags](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/docs/apptags.md) for details.
+See [Instantiating ApplicationTags](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/apptags.md) for details.
 
 ### 2. Set Up an IWavefrontSender
 
 An `IWavefrontSender` object implements the low-level interface for sending data to Wavefront. You can choose to send data to Wavefront using either the [Wavefront proxy](https://docs.wavefront.com/proxies.html) or [direct ingestion](https://docs.wavefront.com/direct_ingestion.html).
 
-* See [Set Up an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/README.md#set-up-an-iwavefrontsender) for details on instantiating a proxy or direct ingestion client.
+* See [Set Up an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/README.md#set-up-an-iwavefrontsender) for details on instantiating a proxy or direct ingestion client.
 
-**Note:** If you are using multiple Wavefront C# SDKs, see [Sharing an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/han/refactoring-and-aspnetcore-updates/docs/sender.md) for information about sharing a single `IWavefrontSender` instance across SDKs.
+**Note:** If you are using multiple Wavefront C# SDKs, see [Sharing an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sender.md) for information about sharing a single `IWavefrontSender` instance across SDKs.
 
 ### 3. Reporter
 You must create a `WavefrontSpanReporter` to report trace data to Wavefront. You can optionally create a `CompositeReporter` to send data to Wavefront and to print to the console.
