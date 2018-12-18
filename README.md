@@ -29,11 +29,12 @@ See [Instantiating ApplicationTags](https://github.com/wavefrontHQ/wavefront-sdk
 
 An `IWavefrontSender` object implements the low-level interface for sending data to Wavefront. You can choose to send data to Wavefront using either the [Wavefront proxy](https://docs.wavefront.com/proxies.html) or [direct ingestion](https://docs.wavefront.com/direct_ingestion.html).
 
-* See [Set Up an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/README.md#set-up-an-iwavefrontsender) for details on instantiating a proxy or direct ingestion client.
+* If you have already set up an `IWavefrontSender` for another C# SDK that will run in the same process, use that one.  (For details about sharing a single instance of `IWavefrontSender` instance across SDKs, see [Share an IWavefrontSender Instance](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sender.md#share-an-iwavefrontsender-instance).
 
-**Note:** If you are using multiple Wavefront C# SDKs, see [Sharing an IWavefrontSender](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sender.md) for information about sharing a single `IWavefrontSender` instance across SDKs.
+* Otherwise, follow the steps in [Set Up an IWavefrontSender Instance](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sender.md#set-up-an-iwavefrontsender-instance).
 
-### 3. Reporter
+
+### 3. Set Up a Reporter
 You must create a `WavefrontSpanReporter` to report trace data to Wavefront. You can optionally create a `CompositeReporter` to send data to Wavefront and to print to the console.
 
 #### Create a WavefrontSpanReporter
@@ -109,19 +110,23 @@ tracer.Close();
 ```
 
 ## Cross Process Context Propagation
-The `ITracer` provides `Inject` and `Extract` methods that can be used to propagate span contexts across process boundaries. This is useful to propagate ChildOf or FollowsFrom relationship between spans across process or host boundaries.
+Following the [OpenTracing standard](https://opentracing.io/docs/overview/inject-extract/), you must arrange for your application's `ITracer` to propagate a span context across process boundaries whenever a client microservice sends a request to another microservice. Doing so enables you to represent the client's request as part of a continuing trace that consists of multiple connected spans. 
 
-Inject a span context (of the current span) when making an external call such as a HTTP invocation:
-```csharp
-ITextMap carrier = new TextMapInjectAdapter(new Dictionary<string, string>());
-tracer.Inject(currentSpan.Context, BuiltinFormats.HttpHeaders, carrier);
+The `ITracer` provides `Inject` and `Extract` methods that can be used to propagate span contexts across process boundaries. You can use these methods to propagate `ChildOf` or `FollowsFrom` relationship between spans across process or host boundaries.
 
-// loop over the injected text map and set its contents on the HTTP request header...
-```
+* In code that makes an external call (such as an HTTP invocation), obtain the current span and its span context, create a carrier, and inject the span context into the carrier:
 
-Extract the propagated span context on receiving a HTTP request:
-```csharp
-ITextMap carrier = new TextMapExtractAdapter(new Dictionary<string, string>());
-ISpanContext ctx = tracer.Extract(BuiltinFormats.HttpHeaders, carrier);
-IScope receivingScope = tracer.BuildSpan("httpRequestOperationName").AsChildOf(ctx).StartActive(true);
-```
+  ```csharp
+  ITextMap carrier = new TextMapInjectAdapter(new Dictionary<string, string>());
+  tracer.Inject(currentSpan.Context, BuiltinFormats.HttpHeaders, carrier);
+
+  // loop over the injected text map and set its contents on the HTTP request header...
+  ```
+
+* In code that responds to the call (i.e., that receives the HTTP request), extract the propagated span context:
+  ```csharp
+  ITextMap carrier = new TextMapExtractAdapter(new Dictionary<string, string>());
+  ISpanContext ctx = tracer.Extract(BuiltinFormats.HttpHeaders, carrier);
+  IScope receivingScope = tracer.BuildSpan("httpRequestOperationName").AsChildOf(ctx).StartActive(true);
+  ```
+
