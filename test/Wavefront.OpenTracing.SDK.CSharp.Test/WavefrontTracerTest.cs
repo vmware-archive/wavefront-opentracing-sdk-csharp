@@ -247,6 +247,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 }
             });
 
+            Task.Delay(15);
             return Task.WhenAll(task1, task2);
         }
 
