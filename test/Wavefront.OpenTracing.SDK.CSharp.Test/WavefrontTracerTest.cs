@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using OpenTracing;
 using OpenTracing.Propagation;
@@ -209,8 +208,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 spans.Add((WavefrontSpan)parentSpan);
             }
 
-            Thread.Sleep(15);
-
             // Late-finish the parent Span now
             parentSpan.Finish();
 
@@ -263,15 +260,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 var spanContext = (WavefrontSpanContext)spans[i].Context;
                 var parentContext = spans[i].GetParents()[0].SpanContext;
 
-                Assert.True(FinishTimeMillis(rootSpan) >= FinishTimeMillis(spans[i]));
                 Assert.Equal(rootSpanContext.GetTraceId(), spanContext.GetTraceId());
                 Assert.Equal(rootSpanContext.GetSpanId(), parentContext.GetSpanId());
             }
-        }
-
-        private static long FinishTimeMillis(WavefrontSpan span)
-        {
-            return span.GetStartTimeMillis() + span.GetDurationMillis();
         }
 
         private static ApplicationTags BuildApplicationTags()
