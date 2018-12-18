@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenTracing;
 using OpenTracing.Propagation;
@@ -208,6 +209,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 spans.Add((WavefrontSpan)parentSpan);
             }
 
+            Thread.Sleep(15);
+
             // Late-finish the parent Span now
             parentSpan.Finish();
 
@@ -247,7 +250,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 }
             });
 
-            Task.Delay(15);
             return Task.WhenAll(task1, task2);
         }
 
