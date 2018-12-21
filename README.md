@@ -110,9 +110,9 @@ tracer.Close();
 ```
 
 ## Cross Process Context Propagation
-Following the [OpenTracing standard](https://opentracing.io/docs/overview/inject-extract/), you must arrange for your application's `ITracer` to propagate a span context across process boundaries whenever a client microservice sends a request to another microservice. Doing so enables you to represent the client's request as part of a continuing trace that consists of multiple connected spans. 
+Following the [OpenTracing standard](https://opentracing.io/docs/overview/inject-extract/), you must arrange for your application's `WavefrontTracer` to propagate a span context across process boundaries whenever a client microservice sends a request to another microservice. Doing so enables you to represent the client's request as part of a continuing trace that consists of multiple connected spans. 
 
-The `ITracer` provides `Inject` and `Extract` methods that can be used to propagate span contexts across process boundaries. You can use these methods to propagate `ChildOf` or `FollowsFrom` relationship between spans across process or host boundaries.
+The `WavefrontTracer` provides `Inject` and `Extract` methods that can be used to propagate span contexts across process boundaries. You can use these methods to propagate `ChildOf` or `FollowsFrom` relationship between spans across process or host boundaries.
 
 * In code that makes an external call (such as an HTTP invocation), obtain the current span and its span context, create a carrier, and inject the span context into the carrier:
 
