@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenTracing;
 using OpenTracing.Tag;
+using Wavefront.OpenTracing.SDK.CSharp.Common;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -180,27 +181,38 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 tags.AddRange(globalTags);
             }
             var context = CreateSpanContext();
+            if (!context.IsSampled())
+            {
+                // This indicates a root span and that no decision has been inherited from a parent
+                // span.  Perform head based sampling as no sampling decision has been obtained for
+                // this span yet.
+                long traceId = Utils.TraceIdToLong(context.GetTraceId());
+                bool decision = tracer.Sample(operationName, traceId, 0);
+                context = context.WithSamplingDecision(decision);
+            }
             return new WavefrontSpan(tracer, operationName, context, startTimestampUtc.Value,
                                      parents, follows, tags);
         }
 
         private WavefrontSpanContext CreateSpanContext()
         {
-            Guid traceId = TraceAncestry();
             Guid spanId = Guid.NewGuid();
-            return new WavefrontSpanContext(traceId, spanId);
+            WavefrontSpanContext context = TraceAncestry();
+            Guid traceId = (context == null) ? Guid.NewGuid() : context.GetTraceId();
+            bool? samplingDecision = context?.GetSamplingDecision();
+            return new WavefrontSpanContext(traceId, spanId, null, samplingDecision);
         }
 
-        private Guid TraceAncestry()
+        private WavefrontSpanContext TraceAncestry()
         {
             if (parents != null && parents.Count > 0)
             {
                 // Prefer child_of relationship for assigning traceId.
-                return parents[0].SpanContext.GetTraceId();
+                return parents[0].SpanContext;
             }
             if (follows != null && follows.Count > 0)
             {
-                return follows[0].SpanContext.GetTraceId();
+                return follows[0].SpanContext;
             }
 
             // Use active span as parent if ignoreActiveSpan is false.
@@ -211,8 +223,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             // Root span if parentSpan is null
-            return parentSpan == null ? Guid.NewGuid() :
-                                            ((WavefrontSpanContext)parentSpan.Context).GetTraceId();
+            return parentSpan == null ? null : (WavefrontSpanContext)parentSpan.Context;
         }
     }
 }

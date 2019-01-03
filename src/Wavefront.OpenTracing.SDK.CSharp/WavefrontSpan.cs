@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using OpenTracing;
 using OpenTracing.Tag;
+using Wavefront.OpenTracing.SDK.CSharp.Common;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -22,6 +23,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private string operationName;
         private TimeSpan duration;
         private WavefrontSpanContext spanContext;
+        private bool? forceSampling;
         private bool finished;
 
         internal WavefrontSpan(
@@ -35,7 +37,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.startTimestampUtc = startTimestampUtc;
             this.parents = parents;
             this.follows = follows;
-            this.tags = tags;
+
+            this.tags = (tags == null || tags.Count == 0) ?
+                null : new List<KeyValuePair<string, string>>();
+            if (tags != null)
+            {
+                foreach (var tag in tags)
+                {
+                    SetTagObject(tag.Key, tag.Value);
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -105,6 +116,23 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 else
                 {
                     tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                }
+
+                // allow span to be reported if sampling.priority is > 0.
+                if (Tags.SamplingPriority.Key.Equals(key) && value is int)
+                {
+                    forceSampling = (int)value > 0;
+                    spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
+                }
+
+                // allow span to be reported if error tag is set.
+                if (forceSampling == null && Tags.Error.Key.Equals(key))
+                {
+                    if (value is bool && (bool)value)
+                    {
+                        forceSampling = true;
+                        spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
+                    }
                 }
             }
             return this;
@@ -201,7 +229,21 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 this.duration = duration;
                 finished = true;
             }
-            tracer.ReportSpan(this);
+
+            // perform another sampling for duration based samplers.
+            if (forceSampling == null && 
+                (!spanContext.IsSampled() || !spanContext.GetSamplingDecision().Value))
+            {
+                long traceId = Utils.TraceIdToLong(spanContext.GetTraceId());
+                bool decision = tracer.Sample(operationName, traceId, GetDurationMillis());
+                spanContext = decision ? spanContext.WithSamplingDecision(decision) : spanContext;
+            }
+
+            // only report spans if the sampling decision allows it.
+            if (spanContext.IsSampled() && spanContext.GetSamplingDecision().Value)
+            {
+                tracer.ReportSpan(this);
+            }
         }
 
         /// <summary>

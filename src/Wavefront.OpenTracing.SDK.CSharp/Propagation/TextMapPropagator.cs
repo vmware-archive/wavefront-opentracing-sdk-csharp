@@ -12,6 +12,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
         private static readonly string BaggagePrefix = "wf-ot-";
         private static readonly string TraceId = BaggagePrefix + "traceid";
         private static readonly string SpanId = BaggagePrefix + "spanid";
+        private static readonly string Sample = BaggagePrefix + "sample";
 
         /// <inheritdoc />
         public void Inject<TCarrier>(WavefrontSpanContext spanContext, TCarrier carrier)
@@ -23,6 +24,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                 foreach (var entry in spanContext.GetBaggageItems())
                 {
                     textMap.Set(BaggagePrefix + entry.Key, entry.Value);
+                }
+                if (spanContext.IsSampled())
+                {
+                    textMap.Set(Sample, spanContext.GetSamplingDecision().ToString());
                 }
             }
             else
@@ -39,6 +44,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                 Guid? traceId = null;
                 Guid? spanId = null;
                 IDictionary<string, string> baggage = null;
+                bool? samplingDecision = null;
 
                 foreach (var entry in textMap)
                 {
@@ -52,6 +58,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                     else if (key.Equals(SpanId))
                     {
                         spanId = Guid.Parse(entry.Value);
+                    }
+                    else if (key.Equals(Sample))
+                    {
+                        samplingDecision = bool.Parse(entry.Value);
                     }
                     else if (key.StartsWith(BaggagePrefix, StringComparison.Ordinal))
                     {
@@ -67,7 +77,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                 {
                     return null;
                 }
-                return new WavefrontSpanContext(traceId.Value, spanId.Value, baggage);
+                return new WavefrontSpanContext(
+                    traceId.Value, spanId.Value, baggage, samplingDecision);
             }
             else
             {
