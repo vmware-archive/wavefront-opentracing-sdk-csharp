@@ -12,6 +12,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
     {
         private readonly Guid traceId;
         private readonly Guid spanId;
+        private readonly bool? samplingDecision;
         private readonly IDictionary<string, string> baggage;
 
         /// <summary>
@@ -20,7 +21,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         /// <param name="traceId">The trace ID.</param>
         /// <param name="spanId">The span ID.</param>
         public WavefrontSpanContext(Guid traceId, Guid spanId)
-            : this(traceId, spanId, null)
+            : this(traceId, spanId, null, null)
         {
         }
 
@@ -31,10 +32,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         /// <param name="spanId">The span ID.</param>
         /// <param name="baggage">The baggage items.</param>
         public WavefrontSpanContext(Guid traceId, Guid spanId,
-                                    IDictionary<string, string> baggage)
+                                    IDictionary<string, string> baggage, bool? decision)
         {
             this.traceId = traceId;
             this.spanId = spanId;
+            samplingDecision = decision;
 
             // Expected that most contexts will have no baggage items except when propagated.
             this.baggage = baggage ?? new Dictionary<string, string>();
@@ -73,7 +75,12 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         {
             var items = new Dictionary<string, string>(baggage);
             items.Add(key, value);
-            return new WavefrontSpanContext(traceId, spanId, items);
+            return new WavefrontSpanContext(traceId, spanId, items, samplingDecision);
+        }
+
+        public WavefrontSpanContext WithSamplingDecision(bool decision)
+        {
+            return new WavefrontSpanContext(traceId, spanId, baggage, decision);
         }
 
         /// <summary>
@@ -92,6 +99,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         public Guid GetSpanId()
         {
             return spanId;
+        }
+
+        public bool IsSampled()
+        {
+            return samplingDecision.HasValue;
+        }
+
+        public bool? GetSamplingDecision()
+        {
+            return samplingDecision;
         }
 
         /// <summary>

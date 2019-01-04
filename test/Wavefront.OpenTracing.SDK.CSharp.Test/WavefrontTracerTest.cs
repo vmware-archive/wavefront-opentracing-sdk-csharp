@@ -4,6 +4,7 @@ using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
+using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common.Application;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
@@ -21,6 +22,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         {
             var tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithSampler(new ConstantSampler(true))
                 .Build();
 
             var span = tracer.BuildSpan("testOp").Start();
@@ -39,6 +41,24 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
 
             Assert.Equal("testCustomer", context.GetBaggageItem("customer"));
             Assert.Equal("mobile", context.GetBaggageItem("requesttype"));
+            Assert.True(context.IsSampled());
+            Assert.True(context.GetSamplingDecision());
+        }
+
+        [Fact]
+        public void TestSampling()
+        {
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithSampler(new ConstantSampler(true))
+                .Build();
+            Assert.True(tracer.Sample("testOp", 1L, 0));
+
+            tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .WithSampler(new ConstantSampler(false))
+                .Build();
+            Assert.False(tracer.Sample("testOp", 1L, 0));
         }
 
         [Fact]

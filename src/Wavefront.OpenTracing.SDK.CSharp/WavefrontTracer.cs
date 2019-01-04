@@ -10,6 +10,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Propagation;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.SDK.CSharp.Common.Application;
 using static Wavefront.SDK.CSharp.Common.Constants;
+using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -23,6 +24,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
         private readonly PropagatorRegistry registry = new PropagatorRegistry();
         private readonly IReporter reporter;
+        private readonly IList<ISampler> samplers;
 
         /// <summary>
         ///     A builder for <see cref="WavefrontTracer"/>.
@@ -32,6 +34,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             private readonly IReporter reporter;
             private readonly ApplicationTags applicationTags;
             private readonly IList<KeyValuePair<string, string>> tags;
+            private readonly IList<ISampler> samplers;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -45,6 +48,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 this.reporter = reporter;
                 this.applicationTags = applicationTags;
                 tags = new List<KeyValuePair<string, string>>();
+                samplers = new List<ISampler>();
             }
 
             /// <summary>
@@ -109,6 +113,20 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             /// <summary>
+            /// Sampler for sampling traces.
+            /// 
+            /// Samplers can be chained by calling this method multiple times.  Sampling decisions
+            /// are OR'd when multiple samplers are used.
+            /// </summary>
+            /// <returns>The sampler.</returns>
+            /// <param name="sampler">Sampler.</param>
+            public Builder WithSampler(ISampler sampler)
+            {
+                samplers.Add(sampler);
+                return this;
+            }
+
+            /// <summary>
             ///     Builds and returns the <see cref="WavefrontTracer"/> instance based on the
             ///     provided configuration.
             /// </summary>
@@ -116,16 +134,17 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             public WavefrontTracer Build()
             {
                 WithApplicationTags(applicationTags);
-                return new WavefrontTracer(reporter, tags);
+                return new WavefrontTracer(reporter, tags, samplers);
             }
         }
 
-        private WavefrontTracer(IReporter reporter, IList<KeyValuePair<string, string>> tags)
+        private WavefrontTracer(
+            IReporter reporter, IList<KeyValuePair<string, string>> tags, IList<ISampler> samplers)
         {
             ScopeManager = new AsyncLocalScopeManager();
             this.reporter = reporter;
             Tags = tags;
-            // TODO: figure out sampling
+            this.samplers = samplers;
         }
 
         /// <inheritdoc />
@@ -163,6 +182,34 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 throw new ArgumentException("invalid format: " + format);
             }
             return propagator.Extract(carrier);
+        }
+
+        internal bool Sample(string operationName, long traceId, long duration)
+        {
+            if (samplers == null || samplers.Count == 0)
+            {
+                return true;
+            }
+            bool earlySampling = (duration == 0);
+            foreach (var sampler in samplers)
+            {
+                bool doSample = (earlySampling == sampler.IsEarly);
+                if (doSample && sampler.Sample(operationName, traceId, duration))
+                {
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.Log(LogLevel.Debug,
+                            $"{sampler.GetType().Name}={true} op={operationName}");
+                    }
+                    return true;
+                }
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.Log(LogLevel.Debug,
+                        $"{sampler.GetType().Name}={false} op={operationName}");
+                }
+            }
+            return false;
         }
 
         internal void ReportSpan(WavefrontSpan span)

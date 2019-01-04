@@ -33,7 +33,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                 span.GetTagsAsList().ToList(), null, "unknown"
             );
 
-            Console.WriteLine("Finished span: " + spanLine);
+            Console.WriteLine($"Finished span: sampling={context.GetSamplingDecision()} {spanLine}");
         }
 
         public int GetFailureCount()
