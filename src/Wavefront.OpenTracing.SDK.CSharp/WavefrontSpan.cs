@@ -16,10 +16,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp
     {
         private readonly WavefrontTracer tracer;
         private readonly DateTime startTimestampUtc;
-        private readonly IList<KeyValuePair<string, string>> tags;
         private readonly IList<Reference> parents;
         private readonly IList<Reference> follows;
 
+        private IList<KeyValuePair<string, string>> tags;
         private string operationName;
         private TimeSpan duration;
         private WavefrontSpanContext spanContext;
@@ -109,6 +109,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         {
             if (!string.IsNullOrEmpty(key) && value != null)
             {
+                if (tags == null)
+                {
+                    tags = new List<KeyValuePair<string, string>>();
+                }
+
                 if (value is bool)
                 {
                     tags.Add(new KeyValuePair<string, string>(key, (bool)value ? "true" : "false"));
