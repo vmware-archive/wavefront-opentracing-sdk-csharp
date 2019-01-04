@@ -10,7 +10,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Propagation;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.SDK.CSharp.Common.Application;
 using static Wavefront.SDK.CSharp.Common.Constants;
-using Wavefront.SDK.CSharp.Entities.Tracing.Sampling;
+using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {

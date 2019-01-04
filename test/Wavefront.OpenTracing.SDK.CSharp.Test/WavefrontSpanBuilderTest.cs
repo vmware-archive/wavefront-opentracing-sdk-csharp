@@ -2,8 +2,8 @@
 using OpenTracing.Tag;
 using Wavefront.OpenTracing.SDK.CSharp.Common;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
+using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common.Application;
-using Wavefront.SDK.CSharp.Entities.Tracing.Sampling;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 
