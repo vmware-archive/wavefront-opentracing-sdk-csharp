@@ -25,6 +25,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private WavefrontSpanContext spanContext;
         private bool? forceSampling;
         private bool finished;
+        private bool isError;
 
         internal WavefrontSpan(
             WavefrontTracer tracer, string operationName, WavefrontSpanContext spanContext,
@@ -139,8 +140,18 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                         spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
                     }
                 }
+
+                if (Tags.Error.Key.Equals(key))
+                {
+                    isError = true;
+                }
             }
             return this;
+        }
+
+        public bool IsError()
+        {
+            return isError;
         }
 
         /// <summary>
@@ -249,6 +260,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 tracer.ReportSpan(this);
             }
+
+            // irrespective of sampling, report wavefront-generated metrics/histograms to Wavefront
+            tracer.ReportWavefrontGeneratedData(this);
         }
 
         /// <summary>
