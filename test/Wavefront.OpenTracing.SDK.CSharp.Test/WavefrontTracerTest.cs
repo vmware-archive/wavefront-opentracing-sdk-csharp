@@ -8,6 +8,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common.Application;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
+using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 using static Wavefront.SDK.CSharp.Common.Constants;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Test
@@ -283,11 +284,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 Assert.Equal(rootSpanContext.GetTraceId(), spanContext.GetTraceId());
                 Assert.Equal(rootSpanContext.GetSpanId(), parentContext.GetSpanId());
             }
-        }
-
-        private static ApplicationTags BuildApplicationTags()
-        {
-            return new ApplicationTags.Builder("myApplication", "myService").Build();
         }
     }
 }

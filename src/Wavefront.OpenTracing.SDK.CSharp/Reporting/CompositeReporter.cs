@@ -24,6 +24,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         }
 
         /// <summary>
+        ///     Gets a list of the reporters in this composite reporter.
+        /// </summary>
+        /// <returns>A list of the composite's reporters.</returns>
+        public IList<IReporter> GetReporters()
+        {
+            // return a copy so that the original list is not modified
+            return new List<IReporter>(reporters);
+        }
+
+        /// <summary>
         ///     Reports an OpenTracing span using each of the delegate reporters.
         /// </summary>
         /// <param name="span">The <see cref="WavefrontSpan"/> to report.</param>

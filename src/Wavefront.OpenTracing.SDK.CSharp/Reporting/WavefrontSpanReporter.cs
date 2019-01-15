@@ -16,8 +16,17 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         private static readonly ILogger logger =
             Logging.LoggerFactory.CreateLogger<WavefrontSpanReporter>();
 
-        private readonly IWavefrontSender wavefrontSender;
-        private readonly string source;
+        /// <summary>
+        ///     Gets the Wavefront proxy or direct ingestion sender.
+        /// </summary>
+        /// <value>The Wavefront sender.</value>
+        public IWavefrontSender WavefrontSender { get; }
+
+        /// <summary>
+        ///     Gets the source for this reporter.
+        /// </summary>
+        /// <value>The source of all spans.</value>
+        public string Source { get; }
 
         /// <summary>
         ///     A builder for <see cref="WavefrontSpanReporter"/> instances.
@@ -72,8 +81,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 
         private WavefrontSpanReporter(IWavefrontSender wavefrontSender, string source)
         {
-            this.wavefrontSender = wavefrontSender;
-            this.source = source;
+            WavefrontSender = wavefrontSender;
+            Source = source;
         }
 
         /// <inheritdoc />
@@ -93,9 +102,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                     .Select(follow => follow.SpanContext.GetSpanId())
                     .ToList();
 
-                wavefrontSender.SendSpan(
+                WavefrontSender.SendSpan(
                     span.GetOperationName(), span.GetStartTimeMillis(), span.GetDurationMillis(),
-                    source, context.GetTraceId(), context.GetSpanId(), parents, follows,
+                    Source, context.GetTraceId(), context.GetSpanId(), parents, follows,
                     span.GetTagsAsList().ToList(), null
                 );
             }
@@ -111,14 +120,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         /// <inheritdoc />
         public int GetFailureCount()
         {
-            return wavefrontSender.GetFailureCount();
+            return WavefrontSender.GetFailureCount();
         }
 
         /// <inheritdoc />
         public void Close()
         {
             // Flush buffer & close client.
-            wavefrontSender.Close();
+            WavefrontSender.Close();
         }
     }
 }

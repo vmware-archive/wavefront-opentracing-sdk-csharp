@@ -1,11 +1,11 @@
 ﻿using System;
 using OpenTracing.Tag;
-using Wavefront.OpenTracing.SDK.CSharp.Common;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
-using Wavefront.SDK.CSharp.Common.Application;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
+using static Wavefront.OpenTracing.SDK.CSharp.Common.Utils;
+using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Test
 {
@@ -143,7 +143,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").AsChildOf(parentContext).Start();
 
             var spanContext = (WavefrontSpanContext)span.Context;
-            long traceId = Utils.TraceIdToLong(spanContext.GetTraceId());
+            long traceId = TraceIdToLong(spanContext.GetTraceId());
             Assert.False(tracer.Sample(span.GetOperationName(), traceId, 0));
             Assert.NotNull(span);
             Assert.Equal(parentContext.TraceId, spanContext.TraceId);
@@ -170,7 +170,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").AsChildOf(parentContext).Start();
 
             var spanContext = (WavefrontSpanContext)span.Context;
-            long traceId = Utils.TraceIdToLong(spanContext.GetTraceId());
+            long traceId = TraceIdToLong(spanContext.GetTraceId());
             Assert.True(tracer.Sample(span.GetOperationName(), traceId, 0));
             Assert.NotNull(span);
             Assert.Equal(parentContext.TraceId, spanContext.TraceId);
@@ -178,11 +178,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             bool? samplingDecision = spanContext.GetSamplingDecision();
             Assert.True(samplingDecision.HasValue);
             Assert.False(samplingDecision.Value);
-        }
-
-        private static ApplicationTags BuildApplicationTags()
-        {
-            return new ApplicationTags.Builder("myApplication", "myService").Build();
         }
     }
 }
