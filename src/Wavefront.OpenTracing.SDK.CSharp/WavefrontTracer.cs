@@ -346,20 +346,19 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                     Tags = pointTags
                 });
             }
-            // TODO: implement a span duration timer that has higher resolution than millis
-            long spanDurationMillis = span.GetDurationMillis();
-            // Add duration in millis to duration counter
+            long spanDurationMicros = span.GetDurationMicros();
+            // Convert duration from micros to millis and add to duration counter
             metricsRoot.Measure.Counter.Increment(new CounterOptions
             {
                 Name = namePrefix + TotalTimeSuffix,
                 Tags = pointTags
-            }, spanDurationMillis);
+            }, spanDurationMicros / 1000);
             // Update histogram with duration in micros
             metricsRoot.Measure.Histogram.Update(
                 new WavefrontHistogramOptions.Builder(namePrefix + DurationSuffix)
                     .Tags(pointTags)
                     .Build(),
-                spanDurationMillis * 1000);
+                spanDurationMicros);
         }
 
         internal void ReportSpan(WavefrontSpan span)

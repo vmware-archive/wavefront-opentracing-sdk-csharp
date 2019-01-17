@@ -59,7 +59,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         [Fact]
         public void TestForcedSampling()
         {
-            // Create tracer with constant sampler set to false
+            // Create tracer that samples no spans
             var tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
@@ -93,7 +93,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         [Fact]
         public void TestRootSampling()
         {
-            // Create tracer with constant sampler set to false
+            // Create tracer that samples no spans
             var tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
@@ -109,7 +109,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             Assert.True(samplingDecision.HasValue);
             Assert.False(samplingDecision.Value);
 
-            // Create tracer with constant sampler set to false
+            // Create tracer that samples all spans
             tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))
@@ -129,7 +129,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         [Fact]
         public void TestPositiveChildSampling()
         {
-            // Create tracer with constant sampler set to false
+            // Create tracer that samples no spans
             var tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
@@ -156,7 +156,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         [Fact]
         public void TestNegativeChildSampling()
         {
-            // Create tracer with constant sampler set to true
+            // Create tracer that samples all spans
             var tracer = new WavefrontTracer
                 .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))

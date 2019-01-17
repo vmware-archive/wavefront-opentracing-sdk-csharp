@@ -103,9 +103,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                     .ToList();
 
                 WavefrontSender.SendSpan(
-                    span.GetOperationName(), span.GetStartTimeMillis(), span.GetDurationMillis(),
-                    Source, context.GetTraceId(), context.GetSpanId(), parents, follows,
-                    span.GetTagsAsList().ToList(), null
+                    span.GetOperationName(), span.GetStartTimeMicros() / 1000,
+                    span.GetDurationMicros() / 1000, Source, context.GetTraceId(),
+                    context.GetSpanId(), parents, follows, span.GetTagsAsList().ToList(), null
                 );
             }
             catch (IOException)
