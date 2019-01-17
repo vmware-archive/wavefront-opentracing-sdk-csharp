@@ -251,7 +251,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 (!spanContext.IsSampled() || !spanContext.GetSamplingDecision().Value))
             {
                 long traceId = Utils.TraceIdToLong(spanContext.GetTraceId());
-                bool decision = tracer.Sample(operationName, traceId, GetDurationMillis());
+                bool decision = tracer.Sample(operationName, traceId, GetDurationMicros() / 1000);
                 spanContext = decision ? spanContext.WithSamplingDecision(decision) : spanContext;
             }
 
@@ -276,22 +276,22 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         }
 
         /// <summary>
-        ///     Get the start timestamp of the span, in milliseconds elapsed since the epoch. 
+        ///     Get the start timestamp of the span, in microseconds elapsed since the epoch. 
         /// </summary>
-        /// <returns>The start timestamp in milliseconds.</returns>
-        public long GetStartTimeMillis()
+        /// <returns>The start timestamp in microseconds.</returns>
+        public long GetStartTimeMicros()
         {
-            return ((DateTimeOffset)startTimestampUtc).ToUnixTimeMilliseconds();
+            return Utils.UnixTimeMicroseconds(startTimestampUtc);
         }
 
         /// <summary>
-        ///     Gets the duration of the span in milliseconds.
+        ///     Gets the duration of the span in microseconds.
         /// </summary>
-        /// <returns>The span duration in milliseconds.</returns>
+        /// <returns>The span duration in microseconds.</returns>
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public long GetDurationMillis()
+        public long GetDurationMicros()
         {
-            return (long)duration.TotalMilliseconds;
+            return Utils.TimeSpanToMicroseconds(duration);
         }
 
         /// <summary>

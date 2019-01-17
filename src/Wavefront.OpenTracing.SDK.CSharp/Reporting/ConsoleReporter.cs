@@ -28,7 +28,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                 .ToList();
 
             var spanLine = Utils.TracingSpanToLineData(
-                span.GetOperationName(), span.GetStartTimeMillis(), span.GetDurationMillis(),
+                span.GetOperationName(), span.GetStartTimeMicros(), span.GetDurationMicros(),
                 source, context.GetTraceId(), context.GetSpanId(), parents, follows,
                 span.GetTagsAsList().ToList(), null, "unknown"
             );
