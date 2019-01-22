@@ -327,10 +327,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 return;
             }
 
-            /*
-             * TODO: Need to update the sanitizing of context + metric name as application, service,
-             * and operation names can have spaces and other invalid metric name characters.
-             */
             var pointTags = new MetricTags(OperationNameTag, span.GetOperationName());
             var namePrefix = applicationServicePrefix + span.GetOperationName();
             metricsRoot.Measure.Counter.Increment(new CounterOptions
