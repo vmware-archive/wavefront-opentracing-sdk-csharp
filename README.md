@@ -6,7 +6,7 @@ This .NET library provides open tracing support for Wavefront.
   * .NET Standard (>= 2.0)
   * OpenTracing (>= 0.12.0)
   * Wavefront.SDK.CSharp (>= 1.0.0) ([NuGet](https://www.nuget.org/packages/Wavefront.SDK.CSharp/))
-  * Wavefront.AppMetrics.SDK.CSharp (>= 2.0.0) ([NuGet](https://www.nuget.org/packages/Wavefront.AppMetrics.SDK.CSharp/))
+  * Wavefront.AppMetrics.SDK.CSharp (>= 2.0.1) ([NuGet](https://www.nuget.org/packages/Wavefront.AppMetrics.SDK.CSharp/))
 
 ## Set Up a Tracer
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.
