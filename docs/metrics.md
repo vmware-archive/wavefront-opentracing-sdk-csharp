@@ -9,7 +9,7 @@ The following metrics and histograms are collected and reported:
 
 | Entity Name       | Entity Type | Description       |
 | ----------------- | ----------- | ----------------- |
-| tracing.derived.<application>.<service>.<operationName>.invocation.count        | Counter            | The number of times that the operation is invoked. |
-| tracing.derived.<application>.<service>.<operationName>.error.count             | Counter            | The number of invocations that are errors (i.e., spans with `error=true`). |
-| tracing.derived.<application>.<service>.<operationName>.total_time.millis.count | Counter            | The total duration of the operation invocations, in milliseconds. |
-| tracing.derived.<application>.<service>.<operationName>.duration.micros.m       | WavefrontHistogram | The duration of each operation invocation, in microseconds. |
+| `tracing.derived.<application>.<service>.<operationName>.invocation.count`        | Counter            | The number of times that the operation is invoked. |
+| `tracing.derived.<application>.<service>.<operationName>.error.count`             | Counter            | The number of invocations that are errors (i.e., spans with `error=true`). |
+| `tracing.derived.<application>.<service>.<operationName>.total_time.millis.count` | Counter            | The total duration of the operation invocations, in milliseconds. |
+| `tracing.derived.<application>.<service>.<operationName>.duration.micros.m`       | WavefrontHistogram | The duration of each operation invocation, in microseconds. |

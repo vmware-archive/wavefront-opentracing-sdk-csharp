@@ -19,7 +19,7 @@ If you want to apply multiple sampling strategies, you can use a `CompositeSampl
 WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTracer builder
 
 ISampler rateSampler = new RateSampler(0.1);
-ISampler durationSampler = new DurationSampler(TimeSpan.FromSeconds(60_000));
+ISampler durationSampler = new DurationSampler(60_000);
 ISampler compositeSampler = new CompositeSampler(new List<ISampler>{ rateSampler, durationSampler });
 wfTracerBuilder.WithSampling(compositeSampler));
 
