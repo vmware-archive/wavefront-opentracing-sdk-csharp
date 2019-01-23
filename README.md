@@ -1,6 +1,6 @@
 # wavefront-opentracing-sdk-csharp [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![travis build status](https://travis-ci.com/wavefrontHQ/wavefront-opentracing-sdk-csharp.svg?branch=master)](https://travis-ci.com/wavefrontHQ/wavefront-opentracing-sdk-csharp) [![NuGet](https://img.shields.io/nuget/v/Wavefront.OpenTracing.SDK.CSharp.svg)](https://www.nuget.org/packages/Wavefront.OpenTracing.SDK.CSharp)
 
-This .NET library provides open tracing support for Wavefront.
+The Wavefront by VMware OpenTracing SDK for C# is a library that provides OpenTracing support for Wavefront.
 
 ## Dependencies
   * .NET Standard (>= 2.0)
@@ -11,13 +11,32 @@ This .NET library provides open tracing support for Wavefront.
 ## Set Up a Tracer
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.
 
-This SDK provides a `WavefrontTracer` for creating spans and sending them to Wavefront. The steps for creating a `WavefrontTracer` are:
+This SDK provides a `WavefrontTracer` for creating spans and sending them to Wavefront. The `WavefrontTracer` also automatically generates and reports [metrics and histograms](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) from your spans. The steps for creating a `WavefrontTracer` are:
 1. Create an `ApplicationTags` instance, which specifies metadata about your application.
 2. Create an `IWavefrontSender` instance for sending data to Wavefront.
 3. Create a `WavefrontSpanReporter` for reporting trace data to Wavefront.
 4. Create the `WavefrontTracer` instance.
 
-For the details of each step, see the sections below.
+The following code sample creates a Tracer. For the details of each step, see the sections below.
+
+```csharp
+Tracer CreateWavefrontTracer(string application, string service) {
+  // Step 1. Create ApplicationTags. 
+  ApplicationTags applicationTags = new ApplicationTags.Builder(application, service).Build();
+  
+  // Step 2. Create an IWavefrontSender instance for sending trace data via a Wavefront proxy.
+  //         Assume you have installed and started the proxy on <proxyHostname>.
+  IWavefrontSender wavefrontSender = new WavefrontProxyClient.Builder(<proxyHostname>)
+    .MetricsPort(2878).TracingPort(30000).Build();
+        
+  // Step 3. Create a WavefrontSpanReporter for reporting trace data that originates on <sourceName>.
+  IReporter wfSpanReporter = new WavefrontSpanReporter.Builder()
+    .WithSource(<sourceName>).Build(wavefrontSender);
+        
+  // Step 4. Create the WavefrontTracer.
+  return new WavefrontTracer.Builder(wfSpanReporter, applicationTags).Build();
+}
+```
 
 ### 1. Set Up Application Tags
 
@@ -39,7 +58,7 @@ An `IWavefrontSender` object implements the low-level interface for sending data
 You must create a `WavefrontSpanReporter` to report trace data to Wavefront. You can optionally create a `CompositeReporter` to send data to Wavefront and to print to the console.
 
 #### Create a WavefrontSpanReporter
-To build a `WavefrontSpanReporter`, you must specify an `IWavefrontSender` and optionally specify a source for the reported spans. If you omit the source, the host name is automatically used.
+To build a `WavefrontSpanReporter`, you must specify an `IWavefrontSender`. You can optionally specify a string that represents the source for the reported spans. If you omit the source, the host name is automatically used.
 
 To create a `WavefrontSpanReporter`:
 
@@ -77,9 +96,12 @@ To create a `WavefrontTracer`, you pass the `ApplicationTags` and `Reporter` ins
 ApplicationTags appTags = BuildTags(); // pseudocode; see above
 IReporter wfSpanReporter = BuildReporter();  // pseudocode; see above
 WavefrontTracer.Builder wfTracerBuilder = new WavefrontTracer.Builder(wfSpanReporter, appTags);
-// Optionally add multi-valued span tags before building
+// Optionally configure sampling and add multi-valued span tags before building
 ITracer tracer = wfTracerBuilder.Build();
 ```
+
+#### Sampling (Optional)
+You can optionally apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sampling.md) for details.
 
 #### Multi-valued Span Tags (Optional)
 You can optionally add metadata to OpenTracing spans in the form of multi-valued tags. The `WavefrontTracer` builder supports different methods to add those tags.
@@ -111,23 +133,7 @@ tracer.Close();
 ```
 
 ## Cross Process Context Propagation
-Following the [OpenTracing standard](https://opentracing.io/docs/overview/inject-extract/), you must arrange for your application's `WavefrontTracer` to propagate a span context across process boundaries whenever a client microservice sends a request to another microservice. Doing so enables you to represent the client's request as part of a continuing trace that consists of multiple connected spans. 
+See the [context propagation documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/contextpropagation.md) for details on propagating span contexts across process boundaries.
 
-The `WavefrontTracer` provides `Inject` and `Extract` methods that can be used to propagate span contexts across process boundaries. You can use these methods to propagate `ChildOf` or `FollowsFrom` relationship between spans across process or host boundaries.
-
-* In code that makes an external call (such as an HTTP invocation), obtain the current span and its span context, create a carrier, and inject the span context into the carrier:
-
-  ```csharp
-  ITextMap carrier = new TextMapInjectAdapter(new Dictionary<string, string>());
-  tracer.Inject(currentSpan.Context, BuiltinFormats.HttpHeaders, carrier);
-
-  // loop over the injected text map and set its contents on the HTTP request header...
-  ```
-
-* In code that responds to the call (i.e., that receives the HTTP request), extract the propagated span context:
-  ```csharp
-  ITextMap carrier = new TextMapExtractAdapter(new Dictionary<string, string>());
-  ISpanContext ctx = tracer.Extract(BuiltinFormats.HttpHeaders, carrier);
-  IScope receivingScope = tracer.BuildSpan("httpRequestOperationName").AsChildOf(ctx).StartActive(true);
-  ```
-
+## Application Metrics and Histograms
+See the [application metrics documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) for details on the out-of-the-box metrics and histograms that are provided.
