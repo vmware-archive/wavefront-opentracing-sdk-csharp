@@ -101,7 +101,7 @@ ITracer tracer = wfTracerBuilder.Build();
 ```
 
 #### Sampling (Optional)
-You can optionally apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-sdk-csharp/blob/master/docs/sampling.md) for details.
+You can optionally apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/sampling.md) for details.
 
 #### Multi-valued Span Tags (Optional)
 You can optionally add metadata to OpenTracing spans in the form of multi-valued tags. The `WavefrontTracer` builder supports different methods to add those tags.
