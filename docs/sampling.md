@@ -21,7 +21,7 @@ WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTrac
 ISampler rateSampler = new RateSampler(0.1);
 ISampler durationSampler = new DurationSampler(60_000);
 ISampler compositeSampler = new CompositeSampler(new List<ISampler>{ rateSampler, durationSampler });
-wfTracerBuilder.WithSampler(compositeSampler));
+wfTracerBuilder.WithSampler(compositeSampler);
 
 // Optionally configure your WavefrontTracer builder further before building
 ITracer tracer = wfTracerBuilder.Build();
