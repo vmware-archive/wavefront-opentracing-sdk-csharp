@@ -7,7 +7,7 @@ For instance, if you want to report approximately 1 out of every 5 traces, you c
 ```csharp
 WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTracer builder
 
-wfTracerBuilder.WithSampling(new RateSampler(0.2));
+wfTracerBuilder.WithSampler(new RateSampler(0.2));
 
 // Optionally configure your WavefrontTracer builder further before building
 ITracer tracer = wfTracerBuilder.Build();
@@ -21,7 +21,7 @@ WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTrac
 ISampler rateSampler = new RateSampler(0.1);
 ISampler durationSampler = new DurationSampler(60_000);
 ISampler compositeSampler = new CompositeSampler(new List<ISampler>{ rateSampler, durationSampler });
-wfTracerBuilder.WithSampling(compositeSampler));
+wfTracerBuilder.WithSampler(compositeSampler));
 
 // Optionally configure your WavefrontTracer builder further before building
 ITracer tracer = wfTracerBuilder.Build();
