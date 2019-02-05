@@ -38,4 +38,4 @@ This library provides the following ISampler implementations:
 
 Do note that regardless of the sampling strategy that is employed, the `WavefrontTracer` will always sample error spans (with `error=true` span tag) and spans that have a sampling priority (`sampling.priority` span tag) greater than 0.
 
-Also note that regardless of sampling, [application metrics and histograms](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/README.md#application-metrics-and-histograms) will automatically be collected and reported for all spans created by the `WavefrontTracer`.
+Also note that regardless of sampling, [RED metrics](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/README.md#red-metrics) will automatically be collected and reported for all spans created by the `WavefrontTracer`.
