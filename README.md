@@ -5,13 +5,13 @@ The Wavefront by VMware OpenTracing SDK for C# is a library that provides OpenTr
 ## Dependencies
   * .NET Standard (>= 2.0)
   * OpenTracing (>= 0.12.0)
-  * Wavefront.SDK.CSharp (>= 1.0.0) ([NuGet](https://www.nuget.org/packages/Wavefront.SDK.CSharp/))
-  * Wavefront.AppMetrics.SDK.CSharp (>= 2.0.1) ([NuGet](https://www.nuget.org/packages/Wavefront.AppMetrics.SDK.CSharp/))
+  * Wavefront.SDK.CSharp (>= 1.1.0) ([NuGet](https://www.nuget.org/packages/Wavefront.SDK.CSharp/))
+  * Wavefront.AppMetrics.SDK.CSharp (>= 2.1.0) ([NuGet](https://www.nuget.org/packages/Wavefront.AppMetrics.SDK.CSharp/))
 
 ## Set Up a Tracer
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.
 
-This SDK provides a `WavefrontTracer` for creating spans and sending them to Wavefront. The `WavefrontTracer` also automatically generates and reports [metrics and histograms](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) from your spans. The steps for creating a `WavefrontTracer` are:
+This SDK provides a `WavefrontTracer` for creating spans and sending them to Wavefront. The `WavefrontTracer` also automatically generates and reports [RED metrics](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) from your spans. The steps for creating a `WavefrontTracer` are:
 1. Create an `ApplicationTags` instance, which specifies metadata about your application.
 2. Create an `IWavefrontSender` instance for sending data to Wavefront.
 3. Create a `WavefrontSpanReporter` for reporting trace data to Wavefront.
@@ -21,7 +21,7 @@ The following code sample creates a Tracer. For the details of each step, see th
 
 ```csharp
 Tracer CreateWavefrontTracer(string application, string service) {
-  // Step 1. Create ApplicationTags. 
+  // Step 1. Create ApplicationTags.
   ApplicationTags applicationTags = new ApplicationTags.Builder(application, service).Build();
   
   // Step 2. Create an IWavefrontSender instance for sending trace data via a Wavefront proxy.
@@ -135,5 +135,5 @@ tracer.Close();
 ## Cross Process Context Propagation
 See the [context propagation documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/contextpropagation.md) for details on propagating span contexts across process boundaries.
 
-## Application Metrics and Histograms
-See the [application metrics documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) for details on the out-of-the-box metrics and histograms that are provided.
+## RED Metrics
+See the [RED metrics documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) for details on the out-of-the-box metrics and histograms that are provided.

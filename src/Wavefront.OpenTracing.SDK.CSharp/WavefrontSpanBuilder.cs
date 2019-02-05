@@ -144,7 +144,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         {
             if (!string.IsNullOrEmpty(key) && value != null)
             {
-                tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                if (value is bool)
+                {
+                    tags.Add(new KeyValuePair<string, string>(key, (bool)value ? "true" : "false"));
+                }
+                else
+                {
+                    tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                }
             }
             return this;
         }
