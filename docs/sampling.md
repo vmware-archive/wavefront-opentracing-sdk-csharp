@@ -7,7 +7,7 @@ For instance, if you want to report approximately 1 out of every 5 traces, you c
 ```csharp
 WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTracer builder
 
-wfTracerBuilder.WithSampling(new RateSampler(0.2));
+wfTracerBuilder.WithSampler(new RateSampler(0.2));
 
 // Optionally configure your WavefrontTracer builder further before building
 ITracer tracer = wfTracerBuilder.Build();
@@ -21,7 +21,7 @@ WavefrontTracer.Builder wfTracerBuilder = ...  // instantiate your WavefrontTrac
 ISampler rateSampler = new RateSampler(0.1);
 ISampler durationSampler = new DurationSampler(60_000);
 ISampler compositeSampler = new CompositeSampler(new List<ISampler>{ rateSampler, durationSampler });
-wfTracerBuilder.WithSampling(compositeSampler));
+wfTracerBuilder.WithSampler(compositeSampler);
 
 // Optionally configure your WavefrontTracer builder further before building
 ITracer tracer = wfTracerBuilder.Build();
@@ -38,4 +38,4 @@ This library provides the following ISampler implementations:
 
 Do note that regardless of the sampling strategy that is employed, the `WavefrontTracer` will always sample error spans (with `error=true` span tag) and spans that have a sampling priority (`sampling.priority` span tag) greater than 0.
 
-Also note that regardless of sampling, [application metrics and histograms](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/README.md#application-metrics-and-histograms) will automatically be collected and reported for all spans created by the `WavefrontTracer`.
+Also note that regardless of sampling, [RED metrics](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/README.md#red-metrics) will automatically be collected and reported for all spans created by the `WavefrontTracer`.
