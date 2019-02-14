@@ -2,11 +2,24 @@
 
 The Wavefront by VMware OpenTracing SDK for C# is a library that provides OpenTracing support for Wavefront.
 
-## Dependencies
+## Frameworks Supported
+  * .NET Framework (>= 4.5.2)
   * .NET Standard (>= 2.0)
-  * OpenTracing (>= 0.12.0)
-  * Wavefront.SDK.CSharp (>= 1.1.0) ([NuGet](https://www.nuget.org/packages/Wavefront.SDK.CSharp/))
-  * Wavefront.AppMetrics.SDK.CSharp (>= 2.1.0) ([NuGet](https://www.nuget.org/packages/Wavefront.AppMetrics.SDK.CSharp/))
+
+## Installation
+Install the [NuGet package](https://www.nuget.org/packages/Wavefront.OpenTracing.SDK.CSharp/).
+
+### Package Manager Console
+
+```
+PM> Install-Package Wavefront.OpenTracing.SDK.CSharp
+```
+
+### .NET CLI Console
+
+```
+> dotnet add package Wavefront.OpenTracing.SDK.CSharp
+```
 
 ## Set Up a Tracer
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.

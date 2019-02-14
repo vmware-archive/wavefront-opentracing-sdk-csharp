@@ -1,9 +1,8 @@
-﻿using System;
-using OpenTracing.Tag;
+﻿using OpenTracing.Tag;
+using System;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Xunit;
-using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Utils;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 
@@ -18,7 +17,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestIgnoreActiveSpan()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .Build();
             var scope = tracer.BuildSpan("testOp").StartActive(true);
             var activeSpan = scope.Span;
@@ -41,7 +40,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestMultiValuedTags()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .Build();
             var span = (WavefrontSpan)tracer.BuildSpan("testOp")
                                             .WithTag("key1", "value1")
@@ -61,7 +60,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         {
             // Create tracer that samples no spans
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
                 .Build();
 
@@ -95,7 +94,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         {
             // Create tracer that samples no spans
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
                 .Build();
 
@@ -111,7 +110,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
 
             // Create tracer that samples all spans
             tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))
                 .Build();
 
@@ -131,7 +130,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         {
             // Create tracer that samples no spans
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
                 .Build();
 
@@ -158,7 +157,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         {
             // Create tracer that samples all spans
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))
                 .Build();
 

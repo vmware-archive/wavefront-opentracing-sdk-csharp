@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using OpenTracing;
 using OpenTracing.Tag;
-using Wavefront.OpenTracing.SDK.CSharp.Common;
+using Wavefront.SDK.CSharp.Common;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -250,7 +250,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             if (forceSampling == null && 
                 (!spanContext.IsSampled() || !spanContext.GetSamplingDecision().Value))
             {
-                long traceId = Utils.TraceIdToLong(spanContext.GetTraceId());
+                long traceId = Common.Utils.TraceIdToLong(spanContext.GetTraceId());
                 bool decision = tracer.Sample(operationName, traceId, GetDurationMicros() / 1000);
                 spanContext = decision ? spanContext.WithSamplingDecision(decision) : spanContext;
             }
@@ -281,7 +281,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         /// <returns>The start timestamp in microseconds.</returns>
         public long GetStartTimeMicros()
         {
-            return Utils.UnixTimeMicroseconds(startTimestampUtc);
+            return DateTimeUtils.UnixTimeMicroseconds(startTimestampUtc);
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         [MethodImpl(MethodImplOptions.Synchronized)]
         public long GetDurationMicros()
         {
-            return Utils.TimeSpanToMicroseconds(duration);
+            return DateTimeUtils.TimeSpanToMicroseconds(duration);
         }
 
         /// <summary>
