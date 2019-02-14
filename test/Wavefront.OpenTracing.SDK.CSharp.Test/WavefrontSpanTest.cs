@@ -1,16 +1,15 @@
-﻿using System;
+﻿using Moq;
+using OpenTracing.Tag;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-using Moq;
-using OpenTracing.Tag;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Entities.Histograms;
 using Xunit;
 using static Moq.It;
-using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Test
@@ -29,28 +28,28 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
 
             Expression<Action<IWavefrontSender>> sendSpan =
                 sender => sender.SendSpan(operationName, IsAny<long>(),
-                   IsAny<long>(), DefaultSource, IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
+                   IsAny<long>(), "source", IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
                    new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(), null);
             Expression<Action<IWavefrontSender>> sendInvocationCount =
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.invocation.count", 1.0,
-                    IsAny<long>(), DefaultSource,
+                    IsAny<long>(), "source",
                     Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendTotalMillis =
                 sender => sender.SendMetric(
                    "tracing.derived.myApplication.myService.dummyOp.total_time.millis.count",
-                   IsAny<double>(), IsAny<long>(), DefaultSource,
+                   IsAny<double>(), IsAny<long>(), "source",
                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendDurationMicros =
                 sender => sender.SendDistribution(
                    "tracing.derived.myApplication.myService.dummyOp.duration.micros",
                    IsAny<IList<KeyValuePair<double, int>>>(),
                    new HashSet<HistogramGranularity> { HistogramGranularity.Minute }, IsAny<long>(),
-                   DefaultSource,
+                   "source",
                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendHeartbeat =
                 sender => sender.SendMetric(
-                   "~component.heartbeat", 1.0, IsAny<long>(), DefaultSource,
+                   "~component.heartbeat", 1.0, IsAny<long>(), "source",
                    IsAny<IDictionary<string, string>>());
 
             wfSenderMock.Setup(sendSpan);
@@ -60,7 +59,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             wfSenderMock.Setup(sendHeartbeat);
 
             WavefrontSpanReporter spanReporter = new WavefrontSpanReporter.Builder()
-                .WithSource(DefaultSource).Build(wfSenderMock.Object);
+                .WithSource("source").Build(wfSenderMock.Object);
             WavefrontTracer tracer = new WavefrontTracer.Builder(spanReporter,
                 BuildApplicationTags()).SetReportFrequency(TimeSpan.FromMilliseconds(50)).Build();
             tracer.BuildSpan(operationName).StartActive(true).Dispose();
@@ -88,33 +87,33 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
 
             Expression<Action<IWavefrontSender>> sendSpan =
                 sender => sender.SendSpan(operationName, IsAny<long>(),
-                   IsAny<long>(), DefaultSource, IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
+                   IsAny<long>(), "source", IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
                    new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(), null);
             Expression<Action<IWavefrontSender>> sendInvocationCount =
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.invocation.count", 1.0,
-                    IsAny<long>(), DefaultSource,
+                    IsAny<long>(), "source",
                     Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendErrorCount =
                 sender => sender.SendMetric(
                    "tracing.derived.myApplication.myService.dummyOp.error.count", 1.0,
-                   IsAny<long>(), DefaultSource,
+                   IsAny<long>(), "source",
                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendTotalMillis =
                 sender => sender.SendMetric(
                    "tracing.derived.myApplication.myService.dummyOp.total_time.millis.count",
-                   IsAny<double>(), IsAny<long>(), DefaultSource,
+                   IsAny<double>(), IsAny<long>(), "source",
                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendDurationMicros =
                 sender => sender.SendDistribution(
                    "tracing.derived.myApplication.myService.dummyOp.duration.micros",
                    IsAny<IList<KeyValuePair<double, int>>>(),
                    new HashSet<HistogramGranularity> { HistogramGranularity.Minute }, IsAny<long>(),
-                   DefaultSource,
+                   "source",
                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendHeartbeat =
                 sender => sender.SendMetric(
-                   "~component.heartbeat", 1.0, IsAny<long>(), DefaultSource,
+                   "~component.heartbeat", 1.0, IsAny<long>(), "source",
                    IsAny<IDictionary<string, string>>());
 
             wfSenderMock.Setup(sendSpan);
@@ -125,7 +124,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             wfSenderMock.Setup(sendHeartbeat);
 
             WavefrontSpanReporter spanReporter = new WavefrontSpanReporter.Builder()
-                .WithSource(DefaultSource).Build(wfSenderMock.Object);
+                .WithSource("source").Build(wfSenderMock.Object);
             WavefrontTracer tracer = new WavefrontTracer.Builder(spanReporter,
                 BuildApplicationTags()).SetReportFrequency(TimeSpan.FromMilliseconds(50)).Build();
             tracer.BuildSpan(operationName).WithTag(Tags.Error, true).StartActive(true).Dispose();

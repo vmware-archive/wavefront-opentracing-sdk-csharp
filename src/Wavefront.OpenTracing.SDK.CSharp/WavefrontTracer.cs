@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using App.Metrics;
+﻿using App.Metrics;
 using App.Metrics.Counter;
 using App.Metrics.Histogram;
 using App.Metrics.Reporting.Wavefront.Builder;
@@ -11,12 +7,15 @@ using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Wavefront.OpenTracing.SDK.CSharp.Propagation;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Common.Application;
-using static Wavefront.SDK.CSharp.Common.Constants;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -29,12 +28,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             Logging.LoggerFactory.CreateLogger<WavefrontTracer>();
 
         private static readonly string DerivedMetricPrefix = "tracing.derived";
-        private static readonly string WavefrontGeneratedComponent = "wavefront-generated";
         private static readonly string InvocationSuffix = ".invocation";
         private static readonly string ErrorSuffix = ".error";
         private static readonly string TotalTimeSuffix = ".total_time.millis";
         private static readonly string DurationSuffix = ".duration.micros";
         private static readonly string OperationNameTag = "operationName";
+
+        private static readonly List<string> HeartbeaterComponents =
+            new List<string> { "wavefront-generated", "opentracing", "csharp" };
 
         private readonly PropagatorRegistry registry = new PropagatorRegistry();
         private readonly IReporter reporter;
@@ -153,11 +154,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
             private void ApplyApplicationTags()
             {
-                WithGlobalTag(ApplicationTagKey, applicationTags.Application);
-                WithGlobalTag(ServiceTagKey, applicationTags.Service);
-                WithGlobalTag(ClusterTagKey, applicationTags.Cluster ?? NullTagValue);
-                WithGlobalTag(ShardTagKey, applicationTags.Shard ?? NullTagValue);
-                WithGlobalTags(applicationTags.CustomTags);
+                if (applicationTags != null)
+                {
+                    WithGlobalTags(applicationTags.ToPointTags());
+                }
             }
 
             /// <summary>
@@ -246,7 +246,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             metricsScheduler.Start();
 
             heartbeaterService = new HeartbeaterService(
-                wfSpanReporter.WavefrontSender, applicationTags, WavefrontGeneratedComponent,
+                wfSpanReporter.WavefrontSender, applicationTags, HeartbeaterComponents,
                 wfSpanReporter.Source);
             heartbeaterService.Start();
         }
@@ -302,15 +302,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 {
                     if (logger.IsEnabled(LogLevel.Debug))
                     {
-                        logger.Log(LogLevel.Debug,
-                            $"{sampler.GetType().Name}={true} op={operationName}");
+                        logger.LogDebug($"{sampler.GetType().Name}={true} op={operationName}");
                     }
                     return true;
                 }
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
-                    logger.Log(LogLevel.Debug,
-                        $"{sampler.GetType().Name}={false} op={operationName}");
+                    logger.LogDebug($"{sampler.GetType().Name}={false} op={operationName}");
                 }
             }
             return false;
@@ -366,7 +364,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
             catch (IOException e)
             {
-                logger.Log(LogLevel.Warning, "Error reporting span", e);
+                logger.LogWarning("Error reporting span", e);
             }
         }
 

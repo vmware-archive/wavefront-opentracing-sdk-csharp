@@ -1,10 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
-using System.Net;
-using Microsoft.Extensions.Logging;
 using Wavefront.SDK.CSharp.Common;
-using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
@@ -40,19 +37,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             /// </summary>
             public Builder()
             {
-                source = GetDefaultSource();
-            }
-
-            private static string GetDefaultSource()
-            {
-                try
-                {
-                    return Dns.GetHostEntry("LocalHost").HostName;
-                }
-                catch (Exception)
-                {
-                    return DefaultSource;
-                }
+                source = Utils.GetDefaultSource();
             }
 
             /// <summary>
@@ -112,7 +97,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             {
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
-                    logger.Log(LogLevel.Debug, "Dropping span " + span);
+                    logger.LogDebug("Dropping span " + span);
                 }
             }
         }

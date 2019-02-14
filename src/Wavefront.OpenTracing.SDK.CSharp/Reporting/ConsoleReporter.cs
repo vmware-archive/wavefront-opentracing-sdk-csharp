@@ -7,6 +7,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
     public class ConsoleReporter : IReporter
     {
         private readonly string source;
+        private readonly string defaultSource = Utils.GetDefaultSource();
 
         public ConsoleReporter(string source)
         {
@@ -30,7 +31,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             var spanLine = Utils.TracingSpanToLineData(
                 span.GetOperationName(), span.GetStartTimeMicros(), span.GetDurationMicros(),
                 source, context.GetTraceId(), context.GetSpanId(), parents, follows,
-                span.GetTagsAsList().ToList(), null, "unknown"
+                span.GetTagsAsList().ToList(), null, defaultSource
             );
 
             Console.WriteLine($"Finished span: sampling={context.GetSamplingDecision()} {spanLine}");

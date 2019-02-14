@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using OpenTracing;
+﻿using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common.Application;
 using Xunit;
-using static Wavefront.OpenTracing.SDK.CSharp.Common.Constants;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 using static Wavefront.SDK.CSharp.Common.Constants;
 
@@ -22,7 +21,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestInjectExtract()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))
                 .Build();
 
@@ -50,13 +49,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestSampling()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(true))
                 .Build();
             Assert.True(tracer.Sample("testOp", 1L, 0));
 
             tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithSampler(new ConstantSampler(false))
                 .Build();
             Assert.False(tracer.Sample("testOp", 1L, 0));
@@ -66,7 +65,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestActiveSpan()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .Build();
             var scope = tracer.BuildSpan("testOp").StartActive();
             var span = tracer.ActiveSpan;
@@ -83,13 +82,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 { "customTag2", "customValue2" }
             };
             var applicationTags =
-                new ApplicationTags.Builder("myApplication", "myServDefaultSource")
+                new ApplicationTags.Builder("myApplication", "myService")
                                    .Cluster("myCluster")
                                    .Shard("myShard")
                                    .CustomTags(customTags)
                                    .Build();
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), applicationTags)
+                .Builder(new ConsoleReporter("source"), applicationTags)
                 .Build();
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
             Assert.NotNull(span);
@@ -108,7 +107,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestGlobalTags()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithGlobalTag("foo", "bar")
                 .Build();
             var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
@@ -120,7 +119,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
 
             var tags = new Dictionary<string, string>{ {"foo1", "bar1"}, {"foo2", "bar2"} };
             tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithGlobalTags(tags)
                 .Build();
             span = (WavefrontSpan)tracer.BuildSpan("testOp")
@@ -139,7 +138,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestGlobalMultiValuedTags()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .WithGlobalTag("key1", "value1")
                 .WithGlobalTag("key1", "value2")
                 .Build();
@@ -156,7 +155,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public async Task TestActiveSpanReplacement()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .Build();
 
             // Start an isolated task and query for its result in another task/thread
@@ -217,7 +216,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public async Task TestLateSpanFinish()
         {
             var tracer = new WavefrontTracer
-                .Builder(new ConsoleReporter(DefaultSource), BuildApplicationTags())
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
                 .Build();
 
             // Create a Span manually and use it as parent of a pair of subtasks
