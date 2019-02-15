@@ -159,6 +159,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 { "service", "myService" },
                 { "cluster", "none" },
                 { "shard", "none" },
+                { "component", "none" },
                 { "operationName", operationName }
             };
         }
