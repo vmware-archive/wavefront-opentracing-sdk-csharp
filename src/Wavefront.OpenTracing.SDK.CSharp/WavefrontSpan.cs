@@ -127,7 +127,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                     tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
                 }
 
-                if (Tags.Component.Equals(key))
+                if (Tags.Component.Key.Equals(key))
                 {
                     componentTagValue = value.ToString();
                 }
