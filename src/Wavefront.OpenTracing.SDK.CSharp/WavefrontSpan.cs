@@ -27,6 +27,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private bool finished;
         private bool isError;
 
+        // Store it as a member variable so that we can efficiently retrieve the component tag.
+        private string componentTagValue = Constants.NullTagValue;
+
         internal WavefrontSpan(
             WavefrontTracer tracer, string operationName, WavefrontSpanContext spanContext,
             DateTime startTimestampUtc, IList<Reference> parents, IList<Reference> follows,
@@ -124,6 +127,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                     tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
                 }
 
+                if (Tags.Component.Equals(key))
+                {
+                    componentTagValue = value.ToString();
+                }
+
                 // allow span to be reported if sampling.priority is > 0.
                 if (Tags.SamplingPriority.Key.Equals(key) && value is int)
                 {
@@ -152,6 +160,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         public bool IsError()
         {
             return isError;
+        }
+
+        public string GetComponentTagValue()
+        {
+            return componentTagValue;
         }
 
         /// <summary>

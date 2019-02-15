@@ -325,7 +325,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 return;
             }
 
-            var pointTags = new MetricTags(OperationNameTag, span.GetOperationName());
+            var pointTags = new MetricTags(
+                new string[] { OperationNameTag, Constants.ComponentTagKey },
+                new string[] { span.GetOperationName(), span.GetComponentTagValue() });
             var namePrefix = applicationServicePrefix + span.GetOperationName();
             metricsRoot.Measure.Counter.Increment(new CounterOptions
             {
