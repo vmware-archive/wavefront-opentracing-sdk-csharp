@@ -40,7 +40,7 @@ Tracer CreateWavefrontTracer(string application, string service) {
   // Step 2. Create an IWavefrontSender instance for sending trace data via a Wavefront proxy.
   //         Assume you have installed and started the proxy on <proxyHostname>.
   IWavefrontSender wavefrontSender = new WavefrontProxyClient.Builder(<proxyHostname>)
-    .MetricsPort(2878).TracingPort(30000).Build();
+    .MetricsPort(2878).TracingPort(30000).DistributionPort(40000).Build();
         
   // Step 3. Create a WavefrontSpanReporter for reporting trace data that originates on <sourceName>.
   IReporter wfSpanReporter = new WavefrontSpanReporter.Builder()
