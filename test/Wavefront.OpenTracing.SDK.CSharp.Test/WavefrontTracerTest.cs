@@ -1,11 +1,14 @@
 ﻿using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Util;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
+using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Common.Application;
+using Wavefront.SDK.CSharp.Entities.Tracing;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
 using static Wavefront.SDK.CSharp.Common.Constants;
@@ -149,6 +152,40 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             Assert.Equal(5, spanTags.Count);
             Assert.Contains("value1", spanTags["key1"]);
             Assert.Contains("value2", spanTags["key1"]);
+        }
+
+        [Fact]
+        public void TestSpanLogs()
+        {
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
+                .Build();
+            var span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
+            var dateTime1 = DateTimeOffset.UtcNow;
+            var timestamp1 = DateTimeUtils.UnixTimeMicroseconds(dateTime1.UtcDateTime);
+            span.Log(dateTime1, "event1");
+            var dateTime2 = DateTimeOffset.UtcNow;
+            var timestamp2 = DateTimeUtils.UnixTimeMicroseconds(dateTime2.UtcDateTime);
+            span.Log(dateTime2, new Dictionary<string, object>
+            {
+                { "event", "event2" },
+                { "event.kind", "error" }
+            });
+
+            var spanLogs = span.GetSpanLogs();
+            Assert.Equal(2, spanLogs.Count);
+
+            SpanLog log1 = spanLogs[0];
+            Assert.Equal(timestamp1, log1.TimestampMicros);
+            Assert.Equal(new Dictionary<string, string> { { LogFields.Event, "event1" } },
+                log1.Fields);
+
+            SpanLog log2 = spanLogs[1];
+            Assert.Equal(timestamp2, log2.TimestampMicros);
+            Assert.Equal(new Dictionary<string, string>{
+                { "event", "event2" },
+                { "event.kind", "error" }
+            }, log2.Fields);
         }
 
         [Fact]

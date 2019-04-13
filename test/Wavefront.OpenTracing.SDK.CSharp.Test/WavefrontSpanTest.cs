@@ -8,6 +8,7 @@ using System.Threading;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Entities.Histograms;
+using Wavefront.SDK.CSharp.Entities.Tracing;
 using Xunit;
 using static Moq.It;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
@@ -29,7 +30,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             Expression<Action<IWavefrontSender>> sendSpan =
                 sender => sender.SendSpan(operationName, IsAny<long>(),
                    IsAny<long>(), "source", IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
-                   new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(), null);
+                   new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(),
+                   new List<SpanLog>());
             Expression<Action<IWavefrontSender>> sendInvocationCount =
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.invocation.count", 1.0,
@@ -88,7 +90,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             Expression<Action<IWavefrontSender>> sendSpan =
                 sender => sender.SendSpan(operationName, IsAny<long>(),
                    IsAny<long>(), "source", IsAny<Guid>(), IsAny<Guid>(), new List<Guid>(),
-                   new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(), null);
+                   new List<Guid>(), IsAny<IList<KeyValuePair<string, string>>>(),
+                   new List<SpanLog>());
             Expression<Action<IWavefrontSender>> sendInvocationCount =
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.invocation.count", 1.0,
