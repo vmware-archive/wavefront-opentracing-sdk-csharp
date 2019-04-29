@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using OpenTracing;
 using OpenTracing.Tag;
 using Wavefront.SDK.CSharp.Common;
+using Wavefront.SDK.CSharp.Common.Metrics;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -18,6 +19,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly DateTime startTimestampUtc;
         private readonly IList<Reference> parents;
         private readonly IList<Reference> follows;
+
+        private readonly WavefrontSdkCounter spansDiscarded;
 
         private IList<KeyValuePair<string, string>> tags;
         private string operationName;
@@ -51,6 +54,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                     SetTagObject(tag.Key, tag.Value);
                 }
             }
+
+            spansDiscarded = tracer.SdkMetricsRegistry?.Counter("spans.discarded");
         }
 
         /// <inheritdoc />
@@ -272,6 +277,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             if (spanContext.IsSampled() && spanContext.GetSamplingDecision().Value)
             {
                 tracer.ReportSpan(this);
+            }
+            else
+            {
+                spansDiscarded?.Inc();
             }
 
             // irrespective of sampling, report wavefront-generated metrics/histograms to Wavefront

@@ -16,6 +16,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Common.Application;
+using Wavefront.SDK.CSharp.Common.Metrics;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -45,6 +46,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly AppMetricsTaskScheduler metricsScheduler;
         private readonly HeartbeaterService heartbeaterService;
         private readonly string applicationServicePrefix;
+
+        private readonly WavefrontSdkMetricsRegistry sdkMetricsRegistry;
 
         /// <summary>
         ///     A builder for <see cref="WavefrontTracer"/>.
@@ -191,7 +194,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                  * to Wavefront only if you use the WavefrontSpanReporter.
                  */
                 InitMetricsHistogramsReporting(spanReporter, applicationTags, reportFrequency,
-                    out metricsRoot, out metricsScheduler, out heartbeaterService);
+                    out metricsRoot, out metricsScheduler, out heartbeaterService,
+                    out sdkMetricsRegistry);
             }
         }
 
@@ -218,7 +222,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private void InitMetricsHistogramsReporting(
             WavefrontSpanReporter wfSpanReporter, ApplicationTags applicationTags,
             TimeSpan reportFrequency, out IMetricsRoot metricsRoot,
-            out AppMetricsTaskScheduler metricsScheduler, out HeartbeaterService heartbeaterService)
+            out AppMetricsTaskScheduler metricsScheduler, out HeartbeaterService heartbeaterService,
+            out WavefrontSdkMetricsRegistry sdkMetricsRegistry)
         {
             var tempMetricsRoot = new MetricsBuilder()
                 .Configuration.Configure(
@@ -249,6 +254,22 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 wfSpanReporter.WavefrontSender, applicationTags, HeartbeaterComponents,
                 wfSpanReporter.Source);
             heartbeaterService.Start();
+
+            sdkMetricsRegistry = new WavefrontSdkMetricsRegistry
+                .Builder(wfSpanReporter.WavefrontSender)
+                .Prefix(Constants.SdkMetricPrefix + ".opentracing")
+                .Source(wfSpanReporter.Source)
+                .Tags(applicationTags.ToPointTags())
+                .Build();
+            wfSpanReporter.SetSdkMetricsRegistry(sdkMetricsRegistry);
+        }
+
+        public WavefrontSdkMetricsRegistry SdkMetricsRegistry
+        {
+            get
+            {
+                return sdkMetricsRegistry;
+            }
         }
 
         /// <inheritdoc />
@@ -366,7 +387,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
             catch (IOException e)
             {
-                logger.LogWarning("Error reporting span", e);
+                logger.LogWarning(0, e, "Error reporting span");
             }
         }
 
@@ -381,14 +402,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         public void Close()
         {
             reporter.Close();
-            if (metricsScheduler != null)
-            {
-                metricsScheduler.Dispose();
-            }
-            if (heartbeaterService != null)
-            {
-                heartbeaterService.Dispose();
-            }
+            sdkMetricsRegistry?.Dispose();
+            metricsScheduler?.Dispose();
+            heartbeaterService?.Dispose();
         }
     }
 }

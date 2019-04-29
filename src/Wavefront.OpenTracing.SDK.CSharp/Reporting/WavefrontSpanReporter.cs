@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Wavefront.SDK.CSharp.Common;
+using Wavefront.SDK.CSharp.Common.Metrics;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 {
@@ -12,6 +16,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
     {
         private static readonly ILogger logger =
             Logging.LoggerFactory.CreateLogger<WavefrontSpanReporter>();
+
+        private readonly BlockingCollection<WavefrontSpan> spanBuffer;
+        private readonly Random random;
+        private readonly double logPercent;
+        private readonly Task sendTask;
+
+        private WavefrontSdkMetricsRegistry sdkMetricsRegistry;
+        private WavefrontSdkCounter spansDropped;
+        private WavefrontSdkCounter spansReceived;
+        private WavefrontSdkCounter reportErrors;
 
         /// <summary>
         ///     Gets the Wavefront proxy or direct ingestion sender.
@@ -31,6 +45,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         public sealed class Builder
         {
             private string source;
+            private int maxQueueSize = 50000;
+            private double logPercent = 0.1;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -52,6 +68,39 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             }
 
             /// <summary>
+            ///     Sets the max queue size of in-memory buffer. Incoming spans are dropped if
+            ///     buffer is full.
+            /// </summary>
+            /// <returns><see cref="this"/></returns>
+            /// <param name="maxQueueSize">The max queue size of in-memory buffer.</param>
+            public Builder WithMaxQueueSize(int maxQueueSize)
+            {
+                if (maxQueueSize <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(maxQueueSize),
+                        "invalid max queue size");
+                }
+                this.maxQueueSize = maxQueueSize;
+                return this;
+            }
+
+            /// <summary>
+            ///     Sets the percent of log messages to be logged. Defaults to 10%.
+            /// </summary>
+            /// <returns><see cref="this"/></returns>
+            /// <param name="logPercent">A value between 0.0 and 1.0.</param>
+            public Builder WithLoggingPercent(double logPercent)
+            {
+                if (logPercent < 0.0 || logPercent > 1.0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(logPercent),
+                        "invalid logging percent");
+                }
+                this.logPercent = logPercent;
+                return this;
+            }
+
+            /// <summary>
             ///     Builds and returns a <see cref="WavefrontSpanReporter"/> for sending
             ///     OpenTracing spans to an <see cref="IWavefrontSender"/> that can send to
             ///     Wavefront via either proxy or direct ingestion.
@@ -60,18 +109,56 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             /// <param name="wavefrontSender">The Wavefront sender.</param>
             public WavefrontSpanReporter Build(IWavefrontSender wavefrontSender)
             {
-                return new WavefrontSpanReporter(wavefrontSender, source);
+                return new WavefrontSpanReporter(wavefrontSender, source, maxQueueSize, logPercent);
             }
         }
 
-        private WavefrontSpanReporter(IWavefrontSender wavefrontSender, string source)
+        private WavefrontSpanReporter(IWavefrontSender wavefrontSender, string source,
+            int maxQueueSize, double logPercent)
         {
             WavefrontSender = wavefrontSender;
             Source = source;
+            spanBuffer = new BlockingCollection<WavefrontSpan>(maxQueueSize);
+            random = new Random();
+            this.logPercent = logPercent;
+            sendTask = Task.Factory.StartNew(SendLoop, TaskCreationOptions.LongRunning);
         }
+
 
         /// <inheritdoc />
         public void Report(WavefrontSpan span)
+        {
+            spansReceived?.Inc();
+            if (!spanBuffer.TryAdd(span))
+            {
+                spansDropped?.Inc();
+                if (LoggingAllowed())
+                {
+                    logger.LogWarning("Buffer full, dropping span: " + span);
+                    if (spansDropped != null)
+                    {
+                        logger.LogWarning("Total spans dropped: " + spansDropped.Count);
+                    }
+                }
+            }
+        }
+
+        private void SendLoop()
+        {
+            foreach (WavefrontSpan span in spanBuffer.GetConsumingEnumerable())
+            {
+                try
+                {
+                    Send(span);
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning(0, e, "Error processing buffer");
+                }
+            }
+        }
+
+        private void Send(WavefrontSpan span)
         {
             try
             {
@@ -93,12 +180,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                     context.GetSpanId(), parents, follows, span.GetTagsAsList().ToList(), null
                 );
             }
-            catch (IOException)
+            catch (IOException e)
             {
-                if (logger.IsEnabled(LogLevel.Debug))
+                if (LoggingAllowed())
                 {
-                    logger.LogDebug("Dropping span " + span);
+                    logger.LogWarning(0, e, "Error reporting span: " + span);
                 }
+                spansDropped?.Inc();
+                reportErrors?.Inc();
             }
         }
 
@@ -108,11 +197,37 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             return WavefrontSender.GetFailureCount();
         }
 
+        internal void SetSdkMetricsRegistry(WavefrontSdkMetricsRegistry sdkMetricsRegistry)
+        {
+            this.sdkMetricsRegistry = sdkMetricsRegistry;
+
+            // init internal metrics
+            this.sdkMetricsRegistry.Gauge("reporter.queue.size", () => spanBuffer.Count);
+            this.sdkMetricsRegistry.Gauge("reporter.queue.remaining_capacity",
+                () => spanBuffer.BoundedCapacity - spanBuffer.Count);
+            spansReceived = this.sdkMetricsRegistry.Counter("reporter.spans.received");
+            spansDropped = this.sdkMetricsRegistry.Counter("reporter.spans.dropped");
+            reportErrors = this.sdkMetricsRegistry.Counter("reporter.errors");
+        }
+
+        private bool LoggingAllowed()
+        {
+            return random.NextDouble() < logPercent;
+        }
+
         /// <inheritdoc />
         public void Close()
         {
-            // Flush buffer & close client.
-            WavefrontSender.Close();
+            spanBuffer.CompleteAdding();
+            try
+            {
+                // wait for 5 secs max
+                _ = Task.WhenAny(sendTask, Task.Delay(5000)).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // no-op
+            }
         }
     }
 }
