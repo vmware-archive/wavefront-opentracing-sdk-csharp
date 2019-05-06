@@ -5,11 +5,11 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoWarn>NU1701</NoWarn>
     <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <Title>Wavefront by VMware OpenTracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
-    <PackageLicenseUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
@@ -30,7 +30,9 @@
   <ItemGroup>
     <PackageReference Include="OpenTracing" Version="0.12.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="Wavefront.SDK.CSharp" Version="1.2.1" />
-    <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="2.2.0" />
+    <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="2.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
