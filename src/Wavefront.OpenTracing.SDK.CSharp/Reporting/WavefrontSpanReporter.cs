@@ -21,6 +21,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         private readonly Random random;
         private readonly double logPercent;
         private readonly Task sendTask;
+        private readonly bool reportSpanLogs;
 
         private WavefrontSdkMetricsRegistry sdkMetricsRegistry;
         private WavefrontSdkCounter spansDropped;
@@ -47,6 +48,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             private string source;
             private int maxQueueSize = 50000;
             private double logPercent = 0.1;
+            private bool reportSpanLogs = true;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -101,6 +103,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             }
 
             /// <summary>
+            ///     Disables the reporting of span logs.
+            /// </summary>
+            /// <returns><see cref="this"/></returns>
+            public Builder DisableSpanLogReporting()
+            {
+                reportSpanLogs = false;
+                return this;
+            }
+
+            /// <summary>
             ///     Builds and returns a <see cref="WavefrontSpanReporter"/> for sending
             ///     OpenTracing spans to an <see cref="IWavefrontSender"/> that can send to
             ///     Wavefront via either proxy or direct ingestion.
@@ -109,12 +121,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             /// <param name="wavefrontSender">The Wavefront sender.</param>
             public WavefrontSpanReporter Build(IWavefrontSender wavefrontSender)
             {
-                return new WavefrontSpanReporter(wavefrontSender, source, maxQueueSize, logPercent);
+                return new WavefrontSpanReporter(wavefrontSender, source, maxQueueSize, logPercent,
+                    reportSpanLogs);
             }
         }
 
         private WavefrontSpanReporter(IWavefrontSender wavefrontSender, string source,
-            int maxQueueSize, double logPercent)
+            int maxQueueSize, double logPercent, bool reportSpanLogs)
         {
             WavefrontSender = wavefrontSender;
             Source = source;
@@ -122,6 +135,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             random = new Random();
             this.logPercent = logPercent;
             sendTask = Task.Factory.StartNew(SendLoop, TaskCreationOptions.LongRunning);
+            this.reportSpanLogs = reportSpanLogs;
         }
 
 
@@ -178,7 +192,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
                     span.GetOperationName(), span.GetStartTimeMicros() / 1000,
                     span.GetDurationMicros() / 1000, Source, context.GetTraceId(),
                     context.GetSpanId(), parents, follows, span.GetTagsAsList().ToList(),
-                    span.GetSpanLogs().ToList()
+                    reportSpanLogs ? span.GetSpanLogs().ToList() : null
                 );
             }
             catch (IOException e)
