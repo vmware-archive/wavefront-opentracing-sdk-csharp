@@ -35,6 +35,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             );
 
             Console.WriteLine($"Finished span: sampling={context.GetSamplingDecision()} {spanLine}");
+
+            var spanLogs = span.GetSpanLogs().ToList();
+            if (spanLogs.Count > 0)
+            {
+                var spanLogsLine = Utils.SpanLogsToLineData(
+                    span.GetStartTimeMicros() / 1000, span.GetDurationMicros() / 1000,
+                    context.GetTraceId(), context.GetSpanId(), spanLogs);
+
+                Console.WriteLine($"span logs: {spanLogsLine}");
+            }
         }
 
         public int GetFailureCount()

@@ -6,6 +6,7 @@ using OpenTracing;
 using OpenTracing.Tag;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Common.Metrics;
+using Wavefront.SDK.CSharp.Entities.Tracing;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -19,6 +20,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly DateTime startTimestampUtc;
         private readonly IList<Reference> parents;
         private readonly IList<Reference> follows;
+        private readonly IList<SpanLog> spanLogs;
 
         private readonly WavefrontSdkCounter spansDiscarded;
 
@@ -44,6 +46,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.startTimestampUtc = startTimestampUtc;
             this.parents = parents;
             this.follows = follows;
+            this.spanLogs = new List<SpanLog>();
 
             this.tags = (tags == null || tags.Count == 0) ?
                 null : new List<KeyValuePair<string, string>>();
@@ -172,43 +175,58 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             return componentTagValue;
         }
 
-        /// <summary>
-        ///     Not supported.
-        /// </summary>
-        /// <returns><see cref="this"/></returns>
+        /// <inheritdoc />
         public ISpan Log(IEnumerable<KeyValuePair<string, object>> fields)
         {
-            // No-op
-            return this;
+            return Log(tracer.CurrentTimestamp(), fields);
         }
 
-        /// <summary>
-        ///     Not supported.
-        /// </summary>
-        /// <returns><see cref="this"/></returns>
+        /// <inheritdoc />
         public ISpan Log(DateTimeOffset timestamp, IEnumerable<KeyValuePair<string, object>> fields)
         {
-            // No-op
+            return Log(timestamp.UtcDateTime, fields);
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        private ISpan Log(DateTime timestampUtc, IEnumerable<KeyValuePair<string, object>> fields)
+        {
+            if (fields == null)
+            {
+                return this;
+            }
+
+            long timestampMicros = DateTimeUtils.UnixTimeMicroseconds(timestampUtc);
+            IDictionary<string, string> fieldsDict = new Dictionary<string, string>();
+            foreach (var field in fields)
+            {
+                fieldsDict[field.Key] = field.Value.ToString();
+            }
+
+            spanLogs.Add(new SpanLog(timestampMicros, fieldsDict));
             return this;
         }
 
-        /// <summary>
-        ///     Not supported.
-        /// </summary>
-        /// <returns><see cref="this"/></returns>
+        /// <inheritdoc />
         public ISpan Log(string @event)
         {
-            // No-op
-            return this;
+            return Log(tracer.CurrentTimestamp(), @event);
         }
 
-        /// <summary>
-        ///     Not supported.
-        /// </summary>
-        /// <returns><see cref="this"/></returns>
+        /// <inheritdoc />
         public ISpan Log(DateTimeOffset timestamp, string @event)
         {
-            // No-op
+            return Log(timestamp.UtcDateTime, @event);
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        private ISpan Log(DateTime timestampUtc, string @event)
+        {
+            if (!string.IsNullOrEmpty(@event))
+            {
+                long timestampMicros = DateTimeUtils.UnixTimeMicroseconds(timestampUtc);
+                var fields = new Dictionary<string, string> { { LogFields.Event, @event } };
+                spanLogs.Add(new SpanLog(timestampMicros, fields));
+            }
             return this;
         }
 
@@ -372,6 +390,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         public IReadOnlyList<Reference> GetFollows()
         {
             return follows == null ? ImmutableList.Create<Reference>() : follows.ToImmutableList();
+        }
+
+        /// <summary>
+        ///     Gets a list of the span logs.
+        /// </summary>
+        /// <returns>The span logs.</returns>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public IReadOnlyList<SpanLog> GetSpanLogs()
+        {
+            return spanLogs.ToImmutableList();
         }
 
         /// <summary>
