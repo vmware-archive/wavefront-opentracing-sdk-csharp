@@ -36,13 +36,18 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
 
             Console.WriteLine($"Finished span: sampling={context.GetSamplingDecision()} {spanLine}");
 
-            var spanLogs = span.GetSpanLogs().ToList();
+            var spanLogs = span.GetSpanLogs();
             if (spanLogs.Count > 0)
             {
-                var spanLogsLine = Utils.SpanLogsToLineData(
-                    context.GetTraceId(), context.GetSpanId(), spanLogs);
-
-                Console.WriteLine($"span logs: {spanLogsLine}");
+                try
+                {
+                    Console.WriteLine("Span logs: " + Utils.SpanLogsToLineData(
+                        context.GetTraceId(), context.GetSpanId(), spanLogs.ToList()));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error processing span logs: " + e);
+                }
             }
         }
 
