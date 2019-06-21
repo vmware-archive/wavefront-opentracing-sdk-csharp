@@ -5,6 +5,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Xunit;
 using static Wavefront.OpenTracing.SDK.CSharp.Common.Utils;
 using static Wavefront.OpenTracing.SDK.CSharp.Test.Utils;
+using static Wavefront.SDK.CSharp.Common.Constants;
 
 namespace Wavefront.OpenTracing.SDK.CSharp.Test
 {
@@ -45,6 +46,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             var span = (WavefrontSpan)tracer.BuildSpan("testOp")
                                             .WithTag("key1", "value1")
                                             .WithTag("key1", "value2")
+                                            .WithTag(ApplicationTagKey, "yourApplication")
                                             .Start();
 
             Assert.NotNull(span);
@@ -53,6 +55,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             Assert.Equal(5, spanTags.Count);
             Assert.Contains("value1", spanTags["key1"]);
             Assert.Contains("value2", spanTags["key1"]);
+            Assert.Contains("myService", spanTags[ServiceTagKey]);
+            // Check that application tag was replaced
+            Assert.Equal(1, spanTags[ApplicationTagKey].Count);
+            Assert.Contains("yourApplication", spanTags[ApplicationTagKey]);
+            Assert.Equal("yourApplication", span.GetSingleValuedTagValue(ApplicationTagKey));
         }
 
         [Fact]

@@ -25,6 +25,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly WavefrontSdkCounter spansDiscarded;
 
         private IList<KeyValuePair<string, string>> tags;
+        private IDictionary<string, KeyValuePair<string, string>> singleValuedTags;
         private string operationName;
         private TimeSpan duration;
         private WavefrontSpanContext spanContext;
@@ -34,6 +35,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
         // Store it as a member variable so that we can efficiently retrieve the component tag.
         private string componentTagValue = Constants.NullTagValue;
+
+        private static readonly ISet<string> SingleValuedTagKeys = new HashSet<string>
+        {
+            Constants.ApplicationTagKey,
+            Constants.ServiceTagKey,
+            Constants.ClusterTagKey,
+            Constants.ShardTagKey
+        };
 
         internal WavefrontSpan(
             WavefrontTracer tracer, string operationName, WavefrontSpanContext spanContext,
@@ -48,8 +57,23 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.follows = follows;
             this.spanLogs = new List<SpanLog>();
 
-            this.tags = (tags == null || tags.Count == 0) ?
-                null : new List<KeyValuePair<string, string>>();
+            IList<KeyValuePair<string, string>> globalTags = tracer.Tags;
+            if ((globalTags == null || globalTags.Count == 0) && (tags == null || tags.Count == 0))
+            {
+                this.tags = null;
+            }
+            else
+            {
+                this.tags = new List<KeyValuePair<string, string>>();
+            }
+            this.singleValuedTags = null;
+            if (globalTags != null)
+            {
+                foreach (var tag in globalTags)
+                {
+                    SetTagObject(tag.Key, tag.Value);
+                }
+            }
             if (tags != null)
             {
                 foreach (var tag in tags)
@@ -126,14 +150,30 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                     tags = new List<KeyValuePair<string, string>>();
                 }
 
+                KeyValuePair<string, string> tag;
                 if (value is bool)
                 {
-                    tags.Add(new KeyValuePair<string, string>(key, (bool)value ? "true" : "false"));
+                    tag = new KeyValuePair<string, string>(key, (bool)value ? "true" : "false");
                 }
                 else
                 {
-                    tags.Add(new KeyValuePair<string, string>(key, value.ToString()));
+                    tag = new KeyValuePair<string, string>(key, value.ToString());
                 }
+
+                if (IsSingleValuedTagKey(key))
+                {
+                    if (singleValuedTags == null)
+                    {
+                        singleValuedTags = new Dictionary<string, KeyValuePair<string, string>>();
+                    }
+                    if (singleValuedTags.ContainsKey(key))
+                    {
+                        tags.Remove(singleValuedTags[key]);
+                    }
+                    singleValuedTags[key] = tag;
+                }
+
+                tags.Add(tag);
 
                 if (Tags.Component.Key.Equals(key))
                 {
@@ -371,6 +411,22 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             return dictionary.ToImmutableDictionary();
         }
 
+        /// <summary>
+        ///     Returns the tag value for the given single-valued tag key. Returns null if no such
+        ///     tag exists.
+        /// </summary>
+        /// <returns>The tag value.</returns>
+        /// <param name="key">The single-valued tag key.</param>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public string GetSingleValuedTagValue(string key)
+        {
+            if (singleValuedTags == null || !singleValuedTags.ContainsKey(key))
+            {
+                return null;
+            }
+            return singleValuedTags[key].Value;
+        }
+
 
         /// <summary>
         ///     Gets the context references that the span is a "child of", as an
@@ -417,6 +473,18 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 ", parents=" + parents +
                 ", follows=" + follows +
                 '}';
+        }
+
+        /// <summary>
+        ///     Returns a boolean indicating whether the given tag key must be single-valued or not.
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c>, if the key must be single-valued, <c>false</c> otherwise.
+        /// </returns>
+        /// <param name="key">The tag key.</param>
+        public static bool IsSingleValuedTagKey(string key)
+        {
+            return SingleValuedTagKeys.Contains(key);
         }
     }
 }

@@ -41,11 +41,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly PropagatorRegistry registry = new PropagatorRegistry();
         private readonly IReporter reporter;
         private readonly IList<ISampler> samplers;
+        private readonly ApplicationTags applicationTags;
 
         private readonly IMetricsRoot metricsRoot;
         private readonly AppMetricsTaskScheduler metricsScheduler;
         private readonly HeartbeaterService heartbeaterService;
-        private readonly string applicationServicePrefix;
 
         private readonly WavefrontSdkMetricsRegistry sdkMetricsRegistry;
 
@@ -184,7 +184,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.reporter = reporter;
             Tags = tags;
             this.samplers = samplers;
-            applicationServicePrefix = $"{applicationTags.Application}.{applicationTags.Service}.";
+            this.applicationTags = applicationTags;
 
             WavefrontSpanReporter spanReporter = GetWavefrontSpanReporter(reporter);
             if (spanReporter != null)
@@ -346,20 +346,31 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 return;
             }
 
-            var pointTags = new MetricTags(
-                new string[] { OperationNameTag, Constants.ComponentTagKey },
-                new string[] { span.GetOperationName(), span.GetComponentTagValue() });
-            var namePrefix = applicationServicePrefix + span.GetOperationName();
+            var keys = new List<string> { OperationNameTag, Constants.ComponentTagKey };
+            var values = new List<string> { span.GetOperationName(), span.GetComponentTagValue() };
+
+            string application = OverrideWithSingleValuedSpanTag(span, keys, values,
+                Constants.ApplicationTagKey, applicationTags.Application);
+            string service = OverrideWithSingleValuedSpanTag(span, keys, values,
+               Constants.ServiceTagKey, applicationTags.Service);
+            OverrideWithSingleValuedSpanTag(span, keys, values, Constants.ClusterTagKey,
+                applicationTags.Cluster);
+            OverrideWithSingleValuedSpanTag(span, keys, values, Constants.ShardTagKey,
+                applicationTags.Shard);
+
+            var pointTags = new MetricTags(keys.ToArray(), values.ToArray());
+
+            string metricNamePrefix = $"{application}.{service}.{span.GetOperationName()}";
             metricsRoot.Measure.Counter.Increment(new CounterOptions
             {
-                Name = namePrefix + InvocationSuffix,
+                Name = metricNamePrefix + InvocationSuffix,
                 Tags = pointTags
             });
             if (span.IsError())
             {
                 metricsRoot.Measure.Counter.Increment(new CounterOptions
                 {
-                    Name = namePrefix + ErrorSuffix,
+                    Name = metricNamePrefix + ErrorSuffix,
                     Tags = pointTags
                 });
             }
@@ -367,15 +378,31 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             // Convert duration from micros to millis and add to duration counter
             metricsRoot.Measure.Counter.Increment(new CounterOptions
             {
-                Name = namePrefix + TotalTimeSuffix,
+                Name = metricNamePrefix + TotalTimeSuffix,
                 Tags = pointTags
             }, spanDurationMicros / 1000);
             // Update histogram with duration in micros
             metricsRoot.Measure.Histogram.Update(
-                new WavefrontHistogramOptions.Builder(namePrefix + DurationSuffix)
+                new WavefrontHistogramOptions.Builder(metricNamePrefix + DurationSuffix)
                     .Tags(pointTags)
                     .Build(),
                 spanDurationMicros);
+        }
+
+        private string OverrideWithSingleValuedSpanTag(WavefrontSpan span, List<string> keys,
+            List<string> values, string key, string defaultValue)
+        {
+            string spanTagValue = span.GetSingleValuedTagValue(key);
+            if (spanTagValue == null)
+            {
+                return defaultValue;
+            }
+            if (!spanTagValue.Equals(defaultValue))
+            {
+                keys.Add(key);
+                values.Add(spanTagValue);
+            }
+            return spanTagValue;
         }
 
         internal void ReportSpan(WavefrontSpan span)
