@@ -10,6 +10,7 @@ using OpenTracing.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Wavefront.OpenTracing.SDK.CSharp.Propagation;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
@@ -41,6 +42,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly PropagatorRegistry registry = new PropagatorRegistry();
         private readonly IReporter reporter;
         private readonly IList<ISampler> samplers;
+        private readonly ISet<string> redMetricsCustomTagKeys;
 
         private readonly IMetricsRoot metricsRoot;
         private readonly AppMetricsTaskScheduler metricsScheduler;
@@ -62,6 +64,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             private readonly IList<ISampler> samplers;
             // Default to 1 minute
             private TimeSpan reportFrequency = TimeSpan.FromMinutes(1);
+            private readonly ISet<string> redMetricsCustomTagKeys;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -76,6 +79,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 this.applicationTags = applicationTags;
                 tags = new List<KeyValuePair<string, string>>();
                 samplers = new List<ISampler>();
+                redMetricsCustomTagKeys = new HashSet<string>();
             }
 
             /// <summary>
@@ -145,6 +149,32 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             /// <summary>
+            ///     Set custom RED metrics tags. If the span has any of the tags, then those get
+            ///     reported to the span generated RED metrics.
+            /// 
+            ///     Example - If you have a span tag of 'tenant-id' that you also want to be
+            ///     propagated to the RED metrics, then you would call this method and pass in
+            ///     an enumerable containing 'tenant-id'.
+            /// 
+            ///     Caveat - Ensure that redMetricsCustomTagKeys are low cardinality tags.
+            /// </summary>
+            /// <returns><see cref="this"/></returns>
+            /// <param name="redMetricsCustomTagKeys">
+            ///     Custom tags you want to report for the span-generated RED metrics.
+            /// </param>
+            public Builder RedMetricsCustomTagKeys(IEnumerable<string> redMetricsCustomTagKeys)
+            {
+                if (redMetricsCustomTagKeys != null)
+                {
+                    foreach (string customTagKey in redMetricsCustomTagKeys)
+                    {
+                        this.redMetricsCustomTagKeys.Add(customTagKey);
+                    }
+                }
+                return this;
+            }
+
+            /// <summary>
             ///     Visible for testing only.
             /// </summary>
             /// <returns><see cref="this"/></returns>
@@ -171,19 +201,21 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             public WavefrontTracer Build()
             {
                 ApplyApplicationTags();
-                return new WavefrontTracer(
-                    reporter, tags, samplers, applicationTags, reportFrequency);
+                return new WavefrontTracer(reporter, tags, samplers, applicationTags,
+                    redMetricsCustomTagKeys,reportFrequency);
             }
         }
 
         private WavefrontTracer(
             IReporter reporter, IList<KeyValuePair<string, string>> tags, IList<ISampler> samplers,
-            ApplicationTags applicationTags, TimeSpan reportFrequency)
+            ApplicationTags applicationTags, ISet<string> redMetricsCustomTagKeys,
+            TimeSpan reportFrequency)
         {
             ScopeManager = new AsyncLocalScopeManager();
             this.reporter = reporter;
             Tags = tags;
             this.samplers = samplers;
+            this.redMetricsCustomTagKeys = redMetricsCustomTagKeys;
             applicationServicePrefix = $"{applicationTags.Application}.{applicationTags.Service}.";
 
             WavefrontSpanReporter spanReporter = GetWavefrontSpanReporter(reporter);
@@ -346,9 +378,24 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 return;
             }
 
-            var pointTags = new MetricTags(
-                new string[] { OperationNameTag, Constants.ComponentTagKey },
-                new string[] { span.GetOperationName(), span.GetComponentTagValue() });
+            var keys = new List<string> { OperationNameTag, Constants.ComponentTagKey };
+            var values = new List<string> { span.GetOperationName(), span.GetComponentTagValue() };
+
+            if (redMetricsCustomTagKeys.Count > 0)
+            {
+                var spanTags = span.GetTagsAsMap();
+                foreach (string customTagKey in redMetricsCustomTagKeys)
+                {
+                    if (spanTags.ContainsKey(customTagKey))
+                    {
+                        // Assuming at least one value exists
+                        keys.Add(customTagKey);
+                        values.Add(spanTags[customTagKey].First());
+                    }
+                }
+            }
+
+            var pointTags = new MetricTags(keys.ToArray(), values.ToArray());
             var namePrefix = applicationServicePrefix + span.GetOperationName();
             metricsRoot.Measure.Counter.Increment(new CounterOptions
             {
