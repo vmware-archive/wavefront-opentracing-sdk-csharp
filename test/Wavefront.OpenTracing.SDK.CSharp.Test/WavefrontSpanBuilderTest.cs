@@ -1,5 +1,6 @@
 ﻿using OpenTracing.Tag;
 using System;
+using System.Collections.Generic;
 using Wavefront.OpenTracing.SDK.CSharp.Reporting;
 using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Xunit;
@@ -177,6 +178,49 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             bool? samplingDecision = spanContext.GetSamplingDecision();
             Assert.True(samplingDecision.HasValue);
             Assert.False(samplingDecision.Value);
+        }
+
+        [Fact]
+        public void TestBaggageItems()
+        {
+            var tracer = new WavefrontTracer
+                .Builder(new ConsoleReporter("source"), BuildApplicationTags())
+                .Build();
+
+            // Create parentContext with baggage items
+            var bag = new Dictionary<string, string>
+            {
+                { "foo", "bar" },
+                { "user", "name" }
+            };
+            var parentContext = new WavefrontSpanContext(Guid.NewGuid(), Guid.NewGuid(), bag, true);
+
+            var span = (WavefrontSpan)tracer.BuildSpan("testOp").AsChildOf(parentContext).Start();
+            Assert.Equal("bar", span.GetBaggageItem("foo"));
+            Assert.Equal("name", span.GetBaggageItem("user"));
+
+            // Create follows
+            var items = new Dictionary<string, string>
+            {
+                { "tracker", "id" },
+                { "db.name", "name" }
+            };
+            var follows = new WavefrontSpanContext(Guid.NewGuid(), Guid.NewGuid(), items, true);
+
+            span = (WavefrontSpan)tracer.BuildSpan("testOp")
+                .AsChildOf(parentContext)
+                .AsChildOf(follows)
+                .Start();
+            Assert.Equal("bar", span.GetBaggageItem("foo"));
+            Assert.Equal("name", span.GetBaggageItem("user"));
+            Assert.Equal("id", span.GetBaggageItem("tracker"));
+            Assert.Equal("name", span.GetBaggageItem("db.name"));
+
+            // Validate root span
+            span = (WavefrontSpan)tracer.BuildSpan("testOp").Start();
+            IDictionary<string, string> baggage = ((WavefrontSpanContext)span.Context).GetBaggage();
+            Assert.NotNull(baggage);
+            Assert.Empty(baggage);
         }
     }
 }
