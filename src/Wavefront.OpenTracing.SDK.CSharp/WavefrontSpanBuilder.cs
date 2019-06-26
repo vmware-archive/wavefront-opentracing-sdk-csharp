@@ -182,11 +182,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 startTimestampUtc = tracer.CurrentTimestamp();
             }
-            var globalTags = tracer.Tags;
-            if (globalTags != null && globalTags.Count > 0)
-            {
-                tags.AddRange(globalTags);
-            }
             var context = CreateSpanContext();
             if (!context.IsSampled())
             {
