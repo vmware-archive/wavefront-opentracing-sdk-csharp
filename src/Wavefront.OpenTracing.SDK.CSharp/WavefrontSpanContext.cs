@@ -31,6 +31,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         /// <param name="traceId">The trace ID.</param>
         /// <param name="spanId">The span ID.</param>
         /// <param name="baggage">The baggage items.</param>
+        /// <param name="decision">The sampling decision.</param>
         public WavefrontSpanContext(Guid traceId, Guid spanId,
                                     IDictionary<string, string> baggage, bool? decision)
         {
@@ -76,6 +77,12 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             var items = new Dictionary<string, string>(baggage);
             items.Add(key, value);
             return new WavefrontSpanContext(traceId, spanId, items, samplingDecision);
+        }
+
+        internal IDictionary<string, string> GetBaggage()
+        {
+            // For internal use. Avoiding conversion to immutable dictionary for memory efficiency.
+            return baggage;
         }
 
         public WavefrontSpanContext WithSamplingDecision(bool decision)

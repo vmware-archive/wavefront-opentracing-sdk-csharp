@@ -182,11 +182,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 startTimestampUtc = tracer.CurrentTimestamp();
             }
-            var globalTags = tracer.Tags;
-            if (globalTags != null && globalTags.Count > 0)
-            {
-                tags.AddRange(globalTags);
-            }
             var context = CreateSpanContext();
             if (!context.IsSampled())
             {
@@ -207,7 +202,45 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             WavefrontSpanContext context = TraceAncestry();
             Guid traceId = (context == null) ? Guid.NewGuid() : context.GetTraceId();
             bool? samplingDecision = context?.GetSamplingDecision();
-            return new WavefrontSpanContext(traceId, spanId, null, samplingDecision);
+            return new WavefrontSpanContext(traceId, spanId, GetBaggage(), samplingDecision);
+        }
+
+        private IDictionary<string, string> GetBaggage()
+        {
+            return AddItems(follows, AddItems(parents, null));
+        }
+
+        /// <summary>
+        ///     Gets a dictionary containing baggage items of all the given references.
+        /// </summary>
+        /// <returns>The dictionary containing baggage items from all references.</returns>
+        /// <param name="references">The list of references to process.</param>
+        /// <param name="baggage">
+        ///     The dictionary to add items to, can be null in which case a new dictionary is
+        ///     created and returned.
+        /// </param>
+        private IDictionary<string, string> AddItems(IList<Reference> references,
+            IDictionary<string, string> baggage)
+        {
+            if (references != null)
+            {
+                foreach (var reference in references)
+                {
+                    IDictionary<string, string> refBaggage = reference.SpanContext.GetBaggage();
+                    if (refBaggage != null && refBaggage.Count > 0)
+                    {
+                        if (baggage == null)
+                        {
+                            baggage = new Dictionary<string, string>();
+                        }
+                        foreach (var keyValuePair in refBaggage)
+                        {
+                            baggage.Add(keyValuePair);
+                        }
+                    }
+                }
+            }
+            return baggage;
         }
 
         private WavefrontSpanContext TraceAncestry()
