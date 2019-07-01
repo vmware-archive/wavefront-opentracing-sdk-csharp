@@ -37,7 +37,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             Console.WriteLine($"Finished span: sampling={context.GetSamplingDecision()} {spanLine}");
 
             var spanLogs = span.GetSpanLogs();
-            if (spanLogs.Count > 0)
+            if (spanLogs != null && spanLogs.Count > 0)
             {
                 try
                 {
