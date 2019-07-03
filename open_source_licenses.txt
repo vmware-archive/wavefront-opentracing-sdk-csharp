@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Wavefront by VMware Opentracing SDK for C# 1.4.0 GA
+Wavefront by VMware Opentracing SDK for C# 1.5.0 GA
 
 ======================================================================
 
