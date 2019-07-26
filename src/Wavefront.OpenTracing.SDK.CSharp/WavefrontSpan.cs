@@ -143,7 +143,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         [MethodImpl(MethodImplOptions.Synchronized)]
         private WavefrontSpan SetTagObject(string key, object value)
         {
-            if (!string.IsNullOrEmpty(key) && value != null)
+            if (!string.IsNullOrEmpty(key) && value != null && !string.IsNullOrEmpty(value.ToString()))
             {
                 if (tags == null)
                 {
