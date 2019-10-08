@@ -428,11 +428,24 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 Tags = pointTags
             }, spanDurationMicros / 1000);
             // Update histogram with duration in micros
-            metricsRoot.Measure.Histogram.Update(
-                new WavefrontHistogramOptions.Builder(metricNamePrefix + DurationSuffix)
-                    .Tags(pointTags)
-                    .Build(),
-                spanDurationMicros);
+            if (span.IsError())
+            {
+                var errorPointTags = MetricTags.Concat(pointTags, new MetricTags("error", "true"));
+                metricsRoot.Measure.Histogram.Update(
+                    new WavefrontHistogramOptions.Builder(metricNamePrefix + DurationSuffix)
+                        .Tags(errorPointTags)
+                        .Build(),
+                    spanDurationMicros);
+            }
+            else
+            {
+                metricsRoot.Measure.Histogram.Update(
+                    new WavefrontHistogramOptions.Builder(metricNamePrefix + DurationSuffix)
+                        .Tags(pointTags)
+                        .Build(),
+                    spanDurationMicros);
+            }
+            
         }
 
         private string OverrideWithSingleValuedSpanTag(WavefrontSpan span, List<string> keys,
