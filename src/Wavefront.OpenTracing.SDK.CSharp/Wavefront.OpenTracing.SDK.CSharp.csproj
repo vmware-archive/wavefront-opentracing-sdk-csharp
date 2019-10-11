@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoWarn>NU1701</NoWarn>
     <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
-    <Version>1.5.2</Version>
+    <Version>1.5.3</Version>
     <Title>Wavefront by VMware OpenTracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
@@ -14,7 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
     <PackageTags>Wavefront;VMware;opentracing;tracing</PackageTags>
-    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v1.5.2</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v1.5.3</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
   </PropertyGroup>
