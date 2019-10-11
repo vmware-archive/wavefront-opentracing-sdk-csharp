@@ -378,9 +378,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 return;
             }
 
-            var keys = new List<string> { OperationNameTag, Constants.ComponentTagKey };
-            var values = new List<string> { span.GetOperationName(), span.GetComponentTagValue() };
+            var pointTagsDict = new Dictionary<string, string>
+            {
+                { OperationNameTag, span.GetOperationName() },
+                { Constants.ComponentTagKey, span.GetComponentTagValue() }
+            };
 
+            bool customTagMatch = false;
             if (redMetricsCustomTagKeys.Count > 0)
             {
                 var spanTags = span.GetTagsAsMap();
@@ -388,23 +392,29 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 {
                     if (spanTags.ContainsKey(customTagKey))
                     {
+                        customTagMatch = true;
                         // Assuming at least one value exists
-                        keys.Add(customTagKey);
-                        values.Add(spanTags[customTagKey].First());
+                        pointTagsDict[customTagKey] = spanTags[customTagKey].First();
                     }
                 }
             }
 
-            string application = OverrideWithSingleValuedSpanTag(span, keys, values,
+            string application = OverrideWithSingleValuedSpanTag(span, pointTagsDict,
                 Constants.ApplicationTagKey, applicationTags.Application);
-            string service = OverrideWithSingleValuedSpanTag(span, keys, values,
+            string service = OverrideWithSingleValuedSpanTag(span, pointTagsDict,
                Constants.ServiceTagKey, applicationTags.Service);
-            OverrideWithSingleValuedSpanTag(span, keys, values, Constants.ClusterTagKey,
+            OverrideWithSingleValuedSpanTag(span, pointTagsDict, Constants.ClusterTagKey,
                 applicationTags.Cluster);
-            OverrideWithSingleValuedSpanTag(span, keys, values, Constants.ShardTagKey,
+            OverrideWithSingleValuedSpanTag(span, pointTagsDict, Constants.ShardTagKey,
                 applicationTags.Shard);
 
-            var pointTags = new MetricTags(keys.ToArray(), values.ToArray());
+            // Propagate custom tags to ~component.heartbeat
+            if (heartbeaterService != null && customTagMatch)
+            {
+                heartbeaterService.ReportCustomTags(pointTagsDict);
+            }
+
+            var pointTags = MetricTags.Concat(MetricTags.Empty, pointTagsDict);
 
             string metricNamePrefix = $"{application}.{service}.{span.GetOperationName()}";
             metricsRoot.Measure.Counter.Increment(new CounterOptions
@@ -445,11 +455,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                         .Build(),
                     spanDurationMicros);
             }
-            
         }
 
-        private string OverrideWithSingleValuedSpanTag(WavefrontSpan span, List<string> keys,
-            List<string> values, string key, string defaultValue)
+        private string OverrideWithSingleValuedSpanTag(WavefrontSpan span,
+            IDictionary<string, string> pointTagsDict, string key, string defaultValue)
         {
             string spanTagValue = span.GetSingleValuedTagValue(key);
             if (spanTagValue == null)
@@ -458,8 +467,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
             if (!spanTagValue.Equals(defaultValue))
             {
-                keys.Add(key);
-                values.Add(spanTagValue);
+                pointTagsDict[key] = spanTagValue;
             }
             return spanTagValue;
         }
