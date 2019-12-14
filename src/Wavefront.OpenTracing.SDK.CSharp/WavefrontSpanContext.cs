@@ -62,7 +62,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         /// <param name="key">The baggage item's key.</param>
         public string GetBaggageItem(string key)
         {
-            return baggage[key];
+            return baggage.TryGetValue(key, out string value) ? value : null;
         }
 
         /// <summary>
