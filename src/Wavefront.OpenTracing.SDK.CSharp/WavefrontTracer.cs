@@ -39,7 +39,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private static readonly List<string> HeartbeaterComponents =
             new List<string> { "wavefront-generated", "opentracing", "csharp" };
 
-        private readonly PropagatorRegistry registry = new PropagatorRegistry();
+        private readonly PropagatorRegistry registry;
         private readonly IReporter reporter;
         private readonly IList<ISampler> samplers;
         private readonly ISet<string> redMetricsCustomTagKeys;
@@ -65,6 +65,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             // Default to 1 minute
             private TimeSpan reportFrequency = TimeSpan.FromMinutes(1);
             private readonly ISet<string> redMetricsCustomTagKeys;
+            private readonly PropagatorRegistry registry;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -80,6 +81,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 tags = new List<KeyValuePair<string, string>>();
                 samplers = new List<ISampler>();
                 redMetricsCustomTagKeys = new HashSet<string>();
+                registry = new PropagatorRegistry();
             }
 
             /// <summary>
@@ -175,6 +177,20 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             /// <summary>
+            ///     Register custom propagator to support various formats.
+            /// </summary>
+            /// <typeparam name="TCarrier">The carrier type.</typeparam>
+            /// <param name="format">The format for the given carrier type.</param>
+            /// <param name="propagator">The propagator to register.</param>
+            /// <returns><see cref="this"/></returns>
+            public Builder RegisterPropagator<TCarrier>(IFormat<TCarrier> format,
+                IPropagator propagator)
+            {
+                registry.Register(format, propagator);
+                return this;
+            }
+
+            /// <summary>
             ///     Visible for testing only.
             /// </summary>
             /// <returns><see cref="this"/></returns>
@@ -202,14 +218,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 ApplyApplicationTags();
                 return new WavefrontTracer(reporter, tags, samplers, applicationTags,
-                    redMetricsCustomTagKeys,reportFrequency);
+                    redMetricsCustomTagKeys, reportFrequency, registry);
             }
         }
 
         private WavefrontTracer(
             IReporter reporter, IList<KeyValuePair<string, string>> tags, IList<ISampler> samplers,
             ApplicationTags applicationTags, ISet<string> redMetricsCustomTagKeys,
-            TimeSpan reportFrequency)
+            TimeSpan reportFrequency, PropagatorRegistry registry)
         {
             ScopeManager = new AsyncLocalScopeManager();
             this.reporter = reporter;
@@ -217,6 +233,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.samplers = samplers;
             this.redMetricsCustomTagKeys = redMetricsCustomTagKeys;
             this.applicationTags = applicationTags;
+            this.registry = registry;
 
             WavefrontSpanReporter spanReporter = GetWavefrontSpanReporter(reporter);
             if (spanReporter != null)
