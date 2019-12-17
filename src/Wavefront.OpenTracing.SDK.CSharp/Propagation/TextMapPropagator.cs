@@ -69,7 +69,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                         {
                             baggage = new Dictionary<string, string>();
                         }
-                        baggage.Add(StripPrefix(key), entry.Value);
+                        baggage[StripPrefix(key)] = entry.Value;
                     }
                 }
 

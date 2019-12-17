@@ -77,7 +77,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                     }
                     else if (key.StartsWith(baggagePrefix.ToLowerInvariant()))
                     {
-                        baggage.Add(StripPrefix(entry.Key), entry.Value);
+                        baggage[StripPrefix(entry.Key)] = entry.Value;
                     }
                 }
 
@@ -87,7 +87,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
                 }
                 if (parentId.Trim().Length > 0 && !parentId.Trim().Equals("null"))
                 {
-                    baggage.Add(ParentIdKey, parentId);
+                    baggage[ParentIdKey] = parentId;
                 }
                 return new WavefrontSpanContext(
                     traceId.Value, spanId.Value, baggage, samplingDecision);
@@ -108,6 +108,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
             {
                 return null;
             }
+            // Jaeger HTTP headers may be URL encoded, so we need to unescape before splitting
+            value = Uri.UnescapeDataString(value);
             string[] ctx = value.Split(':');
             if (ctx.Length != 4 || string.IsNullOrEmpty(ctx[0]))
             {
@@ -126,7 +128,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
             string spanId = GuidToHex(context.GetSpanId());
             bool samplingDecision = context.GetSamplingDecision() ?? false;
             string decision = samplingDecision ? "1" : "0";
-            string parentId = context.GetBaggageItem(ParentIdKey);
+            string parentId = Guid.TryParse(context.GetBaggageItem(ParentIdKey), out Guid guid) ?
+                GuidToHex(guid) : "0";
             return $"{traceId}:{spanId}:{parentId}:{decision}";
         }
 

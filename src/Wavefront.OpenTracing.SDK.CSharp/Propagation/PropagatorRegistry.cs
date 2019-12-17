@@ -40,7 +40,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Propagation
         /// <typeparam name="TCarrier">The type of the carrier.</typeparam>
         public void Register<TCarrier>(IFormat<TCarrier> format, IPropagator propagator)
         {
-            propagators.Add(format, propagator);
+            propagators[format] = propagator;
         }
     }
 }
