@@ -24,7 +24,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestValidWavefrontSpan()
         {
             string operationName = "dummyOp";
-            var pointTags = PointTags(operationName, new Dictionary<string, string>());
+            var pointTags = PointTags(operationName, new Dictionary<string, string>
+            {
+                { Tags.SpanKind.Key, Constants.NullTagValue }
+            });
             var wfSenderMock = new Mock<IWavefrontSender>(MockBehavior.Strict);
 
             Expression<Action<IWavefrontSender>> sendSpan =
@@ -84,7 +87,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
         public void TestErrorWavefrontSpan()
         {
             string operationName = "dummyOp";
-            var pointTags = PointTags(operationName, new Dictionary<string, string>());
+            var pointTags = PointTags(operationName, new Dictionary<string, string>
+            {
+                { Tags.SpanKind.Key, Constants.NullTagValue }
+            });
             var wfSenderMock = new Mock<IWavefrontSender>(MockBehavior.Strict);
 
             Expression<Action<IWavefrontSender>> sendSpan =
@@ -154,7 +160,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             var pointTags = PointTags(operationName, new Dictionary<string, string>
             {
                 { "tenant", "tenant1" },
-                { "env", "Staging" }
+                { "env", "Staging" },
+                { Tags.SpanKind.Key, Tags.SpanKindServer }
             });
             var wfSenderMock = new Mock<IWavefrontSender>(MockBehavior.Strict);
 
@@ -200,7 +207,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 BuildApplicationTags()).SetReportFrequency(TimeSpan.FromMilliseconds(50))
                 .RedMetricsCustomTagKeys(new HashSet<string>{ "tenant", "env" }).Build();
             tracer.BuildSpan(operationName).WithTag("tenant", "tenant1").WithTag("env", "Staging")
-                .WithTag("customId", "abc123").StartActive(true).Dispose();
+                .WithTag("customId", "abc123").WithTag(Tags.SpanKind, Tags.SpanKindServer)
+                .StartActive(true).Dispose();
             Console.WriteLine("Sleeping for 1 second zzzzz .....");
             Thread.Sleep(1000);
             Console.WriteLine("Resuming execution .....");

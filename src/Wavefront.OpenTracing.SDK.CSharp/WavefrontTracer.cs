@@ -18,6 +18,7 @@ using Wavefront.OpenTracing.SDK.CSharp.Sampling;
 using Wavefront.SDK.CSharp.Common;
 using Wavefront.SDK.CSharp.Common.Application;
 using Wavefront.SDK.CSharp.Common.Metrics;
+using static OpenTracing.Tag.Tags;
 
 namespace Wavefront.OpenTracing.SDK.CSharp
 {
@@ -80,7 +81,10 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 this.applicationTags = applicationTags;
                 tags = new List<KeyValuePair<string, string>>();
                 samplers = new List<ISampler>();
-                redMetricsCustomTagKeys = new HashSet<string>();
+                redMetricsCustomTagKeys = new HashSet<string>
+                {
+                    SpanKind.Key
+                };
                 registry = new PropagatorRegistry();
             }
 
@@ -153,6 +157,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             /// <summary>
             ///     Set custom RED metrics tags. If the span has any of the tags, then those get
             ///     reported to the span generated RED metrics.
+            ///     
+            ///     Note - span.kind is promoted by default.
             /// 
             ///     Example - If you have a span tag of 'tenant-id' that you also want to be
             ///     propagated to the RED metrics, then you would call this method and pass in
@@ -397,7 +403,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
             var pointTagsDict = new Dictionary<string, string>
             {
-                { OperationNameTag, span.GetOperationName() },
                 { Constants.ComponentTagKey, span.GetComponentTagValue() }
             };
 
@@ -413,17 +418,25 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                         // Assuming at least one value exists
                         pointTagsDict[customTagKey] = spanTags[customTagKey].First();
                     }
+                    else if (customTagKey == SpanKind.Key)
+                    {
+                        customTagMatch = true;
+                        // Promote a default value for span.kind even if span doesn't have the tag
+                        pointTagsDict[customTagKey] = Constants.NullTagValue;
+                    }
                 }
             }
 
-            string application = OverrideWithSingleValuedSpanTag(span, pointTagsDict,
-                Constants.ApplicationTagKey, applicationTags.Application);
-            string service = OverrideWithSingleValuedSpanTag(span, pointTagsDict,
-               Constants.ServiceTagKey, applicationTags.Service);
-            OverrideWithSingleValuedSpanTag(span, pointTagsDict, Constants.ClusterTagKey,
-                applicationTags.Cluster);
-            OverrideWithSingleValuedSpanTag(span, pointTagsDict, Constants.ShardTagKey,
-                applicationTags.Shard);
+            string application = span.GetSingleValuedTagValue(Constants.ApplicationTagKey) ??
+                applicationTags.Application;
+            string service = span.GetSingleValuedTagValue(Constants.ServiceTagKey) ??
+                applicationTags.Service;
+            pointTagsDict[Constants.ApplicationTagKey] = application;
+            pointTagsDict[Constants.ServiceTagKey] = service;
+            pointTagsDict[Constants.ClusterTagKey] =
+                span.GetSingleValuedTagValue(Constants.ClusterTagKey) ?? applicationTags.Cluster;
+            pointTagsDict[Constants.ShardTagKey] =
+                span.GetSingleValuedTagValue(Constants.ShardTagKey) ?? applicationTags.Shard;
 
             // Propagate custom tags to ~component.heartbeat
             if (heartbeaterService != null && customTagMatch)
@@ -431,7 +444,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 heartbeaterService.ReportCustomTags(pointTagsDict);
             }
 
-            var pointTags = MetricTags.Concat(MetricTags.Empty, pointTagsDict);
+            var pointTags = MetricTags.Concat(
+                new MetricTags(OperationNameTag, span.GetOperationName()), pointTagsDict);
 
             string metricNamePrefix = $"{application}.{service}.{span.GetOperationName()}";
             metricsRoot.Measure.Counter.Increment(new CounterOptions
@@ -472,21 +486,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                         .Build(),
                     spanDurationMicros);
             }
-        }
-
-        private string OverrideWithSingleValuedSpanTag(WavefrontSpan span,
-            IDictionary<string, string> pointTagsDict, string key, string defaultValue)
-        {
-            string spanTagValue = span.GetSingleValuedTagValue(key);
-            if (spanTagValue == null)
-            {
-                return defaultValue;
-            }
-            if (!spanTagValue.Equals(defaultValue))
-            {
-                pointTagsDict[key] = spanTagValue;
-            }
-            return spanTagValue;
         }
 
         internal void ReportSpan(WavefrontSpan span)
