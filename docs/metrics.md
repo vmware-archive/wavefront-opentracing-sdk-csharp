@@ -24,3 +24,5 @@ The following table shows the name and type of the RED metrics that the Wavefron
 Each RED metric name includes values (`<application>`, `<service>`, and `<operationName>`) that are obtained from the corresponding spans. If necessary, these values are modified to comply with Wavefront's metric name format.
 
 Each RED metric has point tags (`application`, `service`, and `operationName`) with values that are obtained from the corresponding spans. The span values are  assigned to the point tags without being modified. Consequently, we recommend that you query for the derived RED metrics using the point tags instead of metric names. 
+
+For information regarding diagnostic metrics for your `IWavefrontSender` instance, [see RED metrics](https://github.com/wavefrontHQ/wavefront-sdk-doc-sources/blob/master/common/metrics.md#red-metrics).
