@@ -4,7 +4,7 @@
 * [Requirements and Installation](#Requirements-and-Installation)
 * [Usage](#Usage)
   * [Application Tags](#1-Set-Up-Application-Tags)
-  * [WavefrontSender](#2-Set-Up-a-WavefrontSender)
+  * [IWavefrontSender](#2-Set-Up-an-IWavefrontSender)
   * [Reporter](#3-Set-Up-a-Reporter)
   * [WavefrontTracer](#4-Create-a-WavefrontTracer)
 * [Span Logs](#Span-Logs)
@@ -145,9 +145,9 @@ This SDK provides a `WavefrontTracer` to:
 The steps for creating a `WavefrontTracer` are:
 
 1. [Create an `ApplicationTags` instance](#1-Set-Up-Application-Tags) to specify metadata about your application.
-2. [Create an `IWavefrontSender` instance](#2-Set-Up-a-Wavefront-Sender) to send trace data to Wavefront.
+2. [Create an `IWavefrontSender` instance](#2-Set-Up-an-IWavefrontSender) to send trace data to Wavefront.
 3. [Create a `WavefrontSpanReporter` instance](#3-Set-Up-a-Reporter) to report trace data to Wavefront.
-4. [Create the `WavefrontTracer` instance](#4-Create-the-WavefrontTracer).
+4. [Create a `WavefrontTracer` instance](#4-create-a-wavefronttracer).
 
 The following code sample creates a Tracer. For details of each step, see the sections below.
 
@@ -236,7 +236,7 @@ ITracer tracer = wfTracerBuilder.Build();
 ```
 
 #### Sampling (Optional)
-Optionally, you can apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/sampling.md) for details.
+Optionally, you can apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/sampling.md#sampling) for details.
 
 #### Multi-valued Span Tags (Optional)
 Optionally, you can add metadata to OpenTracing spans in the form of multi-valued tags. The `WavefrontTracer` builder supports different methods to add those tags.
@@ -275,16 +275,13 @@ tracer.Close();
 
 You can instrument your application to emit logs or events with spans, and examine them from the [Wavefront Tracing UI](https://docs.wavefront.com/tracing_ui_overview.html#drill-down-into-spans-and-view-metrics-and-span-logs).
 
-Use the OpenTracing Span object’s log() method in your application.
+Use the OpenTracing Span object’s `log()` method in your application.
 
 ## Cross Process Context Propagation
-See the [context propagation documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/contextpropagation.md) for details on propagating span contexts across process boundaries.
+See the [context propagation documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/contextpropagation.md#cross-process-context-propagation) for details on propagating span contexts across process boundaries.
 
 ## RED Metrics
-See the [RED metrics documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/metrics.md) for details on the out-of-the-box metrics and histograms that are provided.
-
-## Monitoring the SDK
-See the [diagnostic metrics documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-java/blob/master/docs/internal_metrics.md#internal-diagnostic-metrics) for details on the internal metrics that this SDK collects and reports to Wavefront.
+See the [RED metrics documentation](https://github.com/wavefrontHQ/wavefront-sdk-doc-sources/blob/master/common/metrics.md#red-metrics) for details on the out-of-the-box metrics and histograms that are provided.
 
 ## License
 [Apache 2.0 License](LICENSE).
