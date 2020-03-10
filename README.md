@@ -21,11 +21,11 @@ This is the Wavefront by VMware OpenTracing SDK for C# that provides distributed
 
 **Before you start implementing, let us make sure you are using the correct SDK!**
 
-![Java Tracing SDK Decision Tree](docs/csharp_tracing_sdk.png)
+![CSharp Tracing SDK Decision Tree](docs/csharp_tracing_sdk.png)
 
 >  <b><i>Note</i></b>:
 > </br>
->  * <b>This is the Wavefront by VMware OpenTracing SDK for c#!</b>
+>  * <b>This is the Wavefront by VMware OpenTracing SDK for C#!</b>
 > If this SDK is not what you were looking for, see the <a href="#wavefront-sdks">table</a> given below.
 > * See <a href="https://docs.wavefront.com/tracing_instrumenting_frameworks.html">instrument your application for tracing</a> for more information.
 
@@ -139,7 +139,7 @@ This is the Wavefront by VMware OpenTracing SDK for C# that provides distributed
 
 [Tracer](https://github.com/opentracing/specification/blob/master/specification.md#tracer) is an OpenTracing [interface](https://github.com/opentracing/opentracing-csharp#initialization) for creating spans and propagating them across arbitrary transports.
 
-This SDK provides a `WavefrontTracer` to:
+This SDK provides a `WavefrontTracer` that:
 * Creates spans and sends them to Wavefront.
 * Automatically generates and reports [RED metrics](https://github.com/wavefrontHQ/wavefront-sdk-doc-sources/blob/master/common/metrics.md#red-metrics) from your spans.
 
@@ -240,7 +240,7 @@ ITracer tracer = wfTracerBuilder.Build();
 Optionally, you can apply one or multiple sampling strategies to the `WavefrontTracer`. See the [sampling documentation](https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/blob/master/docs/sampling.md#sampling) for details.
 
 #### Multi-valued Span Tags (Optional)
-Optionally, you can add metadata to OpenTracing spans in the form of multi-valued tags. The `WavefrontTracer` builder supports different methods to add those tags.
+Optionally, you can add metadata to OpenTracing spans in the form of multi-valued tags. The `WavefrontTracer` Builder supports different methods to add those tags.
 
 Example:
 
