@@ -405,11 +405,11 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 { Constants.ComponentTagKey, span.GetComponentTagValue() }
             };
-
+            var spanTags = span.GetTagsAsMap();
             bool customTagMatch = false;
+
             if (redMetricsCustomTagKeys.Count > 0)
             {
-                var spanTags = span.GetTagsAsMap();
                 foreach (string customTagKey in redMetricsCustomTagKeys)
                 {
                     if (spanTags.ContainsKey(customTagKey))
@@ -438,14 +438,25 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             pointTagsDict[Constants.ShardTagKey] =
                 span.GetSingleValuedTagValue(Constants.ShardTagKey) ?? applicationTags.Shard;
 
+            var pointTags = MetricTags.Concat(
+                new MetricTags(OperationNameTag, span.GetOperationName()), pointTagsDict);
+            var errorTags = pointTags;
+
+            // Promote http.status_code to error counter for error spans
+            if (span.IsError() && spanTags.ContainsKey(HttpStatus.Key))
+            {
+                customTagMatch = true;
+                string httpStatusValue = spanTags[HttpStatus.Key].First();
+                pointTagsDict[HttpStatus.Key] = httpStatusValue;
+                errorTags = MetricTags.Concat(errorTags,
+                    new MetricTags(HttpStatus.Key, httpStatusValue));
+            }
+
             // Propagate custom tags to ~component.heartbeat
             if (heartbeaterService != null && customTagMatch)
             {
                 heartbeaterService.ReportCustomTags(pointTagsDict);
             }
-
-            var pointTags = MetricTags.Concat(
-                new MetricTags(OperationNameTag, span.GetOperationName()), pointTagsDict);
 
             string metricNamePrefix = $"{application}.{service}.{span.GetOperationName()}";
             metricsRoot.Measure.Counter.Increment(new CounterOptions
@@ -458,7 +469,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 metricsRoot.Measure.Counter.Increment(new CounterOptions
                 {
                     Name = metricNamePrefix + ErrorSuffix,
-                    Tags = pointTags
+                    Tags = errorTags
                 });
             }
             long spanDurationMicros = span.GetDurationMicros();
@@ -471,10 +482,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             // Update histogram with duration in micros
             if (span.IsError())
             {
-                var errorPointTags = MetricTags.Concat(pointTags, new MetricTags("error", "true"));
                 metricsRoot.Measure.Histogram.Update(
                     new WavefrontHistogramOptions.Builder(metricNamePrefix + DurationSuffix)
-                        .Tags(errorPointTags)
+                        .Tags(MetricTags.Concat(pointTags, new MetricTags("error", "true")))
                         .Build(),
                     spanDurationMicros);
             }
