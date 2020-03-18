@@ -327,7 +327,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 (!spanContext.IsSampled() || !spanContext.GetSamplingDecision().Value))
             {
                 long traceId = Common.Utils.TraceIdToLong(spanContext.GetTraceId());
-                bool decision = tracer.Sample(operationName, traceId, GetDurationMicros() / 1000);
+                bool decision = tracer.Sample(operationName, traceId, GetDurationMicros() / 1000,
+                    spanContext.IsSampled() ? spanContext.GetSamplingDecision().Value : true);
                 spanContext = decision ? spanContext.WithSamplingDecision(decision) : spanContext;
             }
 

@@ -366,9 +366,15 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
         internal bool Sample(string operationName, long traceId, long duration)
         {
+            return Sample(operationName, traceId, duration, true);
+        }
+
+        internal bool Sample(string operationName, long traceId, long duration,
+            bool defaultDecision)
+        {
             if (samplers == null || samplers.Count == 0)
             {
-                return true;
+                return defaultDecision;
             }
             bool earlySampling = (duration == 0);
             foreach (var sampler in samplers)
