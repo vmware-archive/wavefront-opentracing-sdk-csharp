@@ -3,9 +3,13 @@ solution: Wavefront.OpenTracing.SDK.CSharp.sln
 mono: none
 dotnet: 2.1.300
 
+before_install:
+  - sudo apt-get install dotnet-sdk-3.1
+
 install:
  - dotnet restore
 
 script:
  - dotnet build
- - dotnet test test/Wavefront.OpenTracing.SDK.CSharp.Test/Wavefront.OpenTracing.SDK.CSharp.Test.csproj
+ - dotnet test test/Wavefront.OpenTracing.SDK.CSharp.Test/Wavefront.OpenTracing.SDK.CSharp.Test.csproj -f netcoreapp2.1
+ - dotnet test test/Wavefront.OpenTracing.SDK.CSharp.Test/Wavefront.OpenTracing.SDK.CSharp.Test.csproj -f netcoreapp3.1
