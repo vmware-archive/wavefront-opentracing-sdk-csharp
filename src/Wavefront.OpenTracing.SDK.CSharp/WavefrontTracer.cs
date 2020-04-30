@@ -27,9 +27,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
     /// </summary>
     public class WavefrontTracer : ITracer
     {
-        private static readonly ILogger logger =
-            Logging.LoggerFactory.CreateLogger<WavefrontTracer>();
-
         private static readonly string DerivedMetricPrefix = "tracing.derived";
         private static readonly string InvocationSuffix = ".invocation";
         private static readonly string ErrorSuffix = ".error";
@@ -40,6 +37,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private static readonly List<string> HeartbeaterComponents =
             new List<string> { "wavefront-generated", "opentracing", "csharp" };
 
+        private readonly ILogger logger;
         private readonly PropagatorRegistry registry;
         private readonly IReporter reporter;
         private readonly IList<ISampler> samplers;
@@ -67,6 +65,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             private TimeSpan reportFrequency = TimeSpan.FromMinutes(1);
             private readonly ISet<string> redMetricsCustomTagKeys;
             private readonly PropagatorRegistry registry;
+            private ILoggerFactory loggerFactory;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -197,6 +196,17 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             /// <summary>
+            /// Sets the logger factory used to create the tracer's logger.
+            /// </summary>
+            /// <param name="loggerFactory">The logger factory.</param>
+            /// <returns><see cref="this"/></returns>
+            public Builder LoggerFactory(ILoggerFactory loggerFactory)
+            {
+                this.loggerFactory = loggerFactory;
+                return this;
+            }
+
+            /// <summary>
             ///     Visible for testing only.
             /// </summary>
             /// <returns><see cref="this"/></returns>
@@ -224,14 +234,15 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             {
                 ApplyApplicationTags();
                 return new WavefrontTracer(reporter, tags, samplers, applicationTags,
-                    redMetricsCustomTagKeys, reportFrequency, registry);
+                    redMetricsCustomTagKeys, reportFrequency, registry, 
+                    loggerFactory ?? Logging.LoggerFactory);
             }
         }
 
         private WavefrontTracer(
             IReporter reporter, IList<KeyValuePair<string, string>> tags, IList<ISampler> samplers,
             ApplicationTags applicationTags, ISet<string> redMetricsCustomTagKeys,
-            TimeSpan reportFrequency, PropagatorRegistry registry)
+            TimeSpan reportFrequency, PropagatorRegistry registry, ILoggerFactory loggerFactory)
         {
             ScopeManager = new AsyncLocalScopeManager();
             this.reporter = reporter;
@@ -240,6 +251,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             this.redMetricsCustomTagKeys = redMetricsCustomTagKeys;
             this.applicationTags = applicationTags;
             this.registry = registry;
+            logger = loggerFactory.CreateLogger<WavefrontTracer>();
 
             WavefrontSpanReporter spanReporter = GetWavefrontSpanReporter(reporter);
             if (spanReporter != null)
@@ -249,7 +261,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                  * to Wavefront only if you use the WavefrontSpanReporter.
                  */
                 InitMetricsHistogramsReporting(spanReporter, applicationTags, reportFrequency,
-                    out metricsRoot, out metricsScheduler, out heartbeaterService,
+                    loggerFactory, out metricsRoot, out metricsScheduler, out heartbeaterService,
                     out sdkMetricsRegistry);
             }
         }
@@ -276,7 +288,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
         private void InitMetricsHistogramsReporting(
             WavefrontSpanReporter wfSpanReporter, ApplicationTags applicationTags,
-            TimeSpan reportFrequency, out IMetricsRoot metricsRoot,
+            TimeSpan reportFrequency, ILoggerFactory loggerFactory, out IMetricsRoot metricsRoot,
             out AppMetricsTaskScheduler metricsScheduler, out HeartbeaterService heartbeaterService,
             out WavefrontSdkMetricsRegistry sdkMetricsRegistry)
         {
@@ -293,6 +305,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                         options.Source = wfSpanReporter.Source;
                         options.ApplicationTags = applicationTags;
                         options.WavefrontHistogram.ReportMinuteDistribution = true;
+                        options.LoggerFactory = loggerFactory;
                     })
                 .Build();
             metricsRoot = tempMetricsRoot;
@@ -307,7 +320,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
             heartbeaterService = new HeartbeaterService(
                 wfSpanReporter.WavefrontSender, applicationTags, HeartbeaterComponents,
-                wfSpanReporter.Source);
+                wfSpanReporter.Source, loggerFactory);
             heartbeaterService.Start();
 
             sdkMetricsRegistry = new WavefrontSdkMetricsRegistry
@@ -315,6 +328,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 .Prefix(Constants.SdkMetricPrefix + ".opentracing")
                 .Source(wfSpanReporter.Source)
                 .Tags(applicationTags.ToPointTags())
+                .LoggerFactory(loggerFactory)
                 .Build();
             wfSpanReporter.SetSdkMetricsRegistry(sdkMetricsRegistry);
         }
