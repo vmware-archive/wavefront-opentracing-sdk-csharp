@@ -14,9 +14,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
     /// </summary>
     public class WavefrontSpanReporter : IReporter
     {
-        private static readonly ILogger logger =
-            Logging.LoggerFactory.CreateLogger<WavefrontSpanReporter>();
-
+        private readonly ILogger logger;
         private readonly BlockingCollection<WavefrontSpan> spanBuffer;
         private readonly Random random;
         private readonly double logPercent;
@@ -49,6 +47,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             private int maxQueueSize = 50000;
             private double logPercent = 0.1;
             private bool reportSpanLogs = true;
+            private ILoggerFactory loggerFactory;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Builder"/> class.
@@ -113,6 +112,17 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             }
 
             /// <summary>
+            /// Sets the logger factory used to create the reporter's logger.
+            /// </summary>
+            /// <param name="loggerFactory">The logger factory.</param>
+            /// <returns><see cref="this"/></returns>
+            public Builder LoggerFactory(ILoggerFactory loggerFactory)
+            {
+                this.loggerFactory = loggerFactory;
+                return this;
+            }
+
+            /// <summary>
             ///     Builds and returns a <see cref="WavefrontSpanReporter"/> for sending
             ///     OpenTracing spans to an <see cref="IWavefrontSender"/> that can send to
             ///     Wavefront via either proxy or direct ingestion.
@@ -122,18 +132,19 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             public WavefrontSpanReporter Build(IWavefrontSender wavefrontSender)
             {
                 return new WavefrontSpanReporter(wavefrontSender, source, maxQueueSize, logPercent,
-                    reportSpanLogs);
+                    reportSpanLogs, loggerFactory ?? Logging.LoggerFactory);
             }
         }
 
         private WavefrontSpanReporter(IWavefrontSender wavefrontSender, string source,
-            int maxQueueSize, double logPercent, bool reportSpanLogs)
+            int maxQueueSize, double logPercent, bool reportSpanLogs, ILoggerFactory loggerFactory)
         {
             WavefrontSender = wavefrontSender;
             Source = source;
             spanBuffer = new BlockingCollection<WavefrontSpan>(maxQueueSize);
             random = new Random();
             this.logPercent = logPercent;
+            logger = loggerFactory.CreateLogger<WavefrontSpanReporter>();
             sendTask = Task.Factory.StartNew(SendLoop, TaskCreationOptions.LongRunning);
             this.reportSpanLogs = reportSpanLogs;
         }
