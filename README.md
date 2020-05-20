@@ -269,7 +269,7 @@ ITracer tracer = wfTracerBuilder.Build();
 Optionally, you can add custom span-level tags to propagate RED metrics. See [Custom Span-Level Tags for RED Metrics](https://docs.wavefront.com/trace_data_details.html#custom-span-level-tags-for-red-metrics) for details.
 
 ```csharp
-wfTracerBuilder.redMetricsCustomTagKeys("env", "location");
+wfTracerBuilder.RedMetricsCustomTagKeys(new HashSet<string>{ "env", "location" });
 ```
 
 #### Close the Tracer
