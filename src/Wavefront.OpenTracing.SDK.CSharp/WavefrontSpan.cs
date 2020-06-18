@@ -33,6 +33,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private bool finished;
         private bool isError;
 
+        private static readonly string DebugTagKey = "debug";
         // Store it as a member variable so that we can efficiently retrieve the component tag.
         private string componentTagValue = Constants.NullTagValue;
 
@@ -185,6 +186,16 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 {
                     forceSampling = (int)value > 0;
                     spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
+                }
+
+                // allow span to be reported if debug is set to true.
+                if (forceSampling == null || !forceSampling.Value)
+                {
+                    if (DebugTagKey.Equals(key) && value.ToString().Equals("true"))
+                    {
+                        forceSampling = true;
+                        spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
+                    }
                 }
 
                 // allow span to be reported if error tag is set.
