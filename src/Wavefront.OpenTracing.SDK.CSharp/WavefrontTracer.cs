@@ -447,6 +447,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 }
             }
 
+            // Promote http.status_code
+            if (spanTags.ContainsKey(HttpStatus.Key) && !pointTagsDict.ContainsKey(HttpStatus.Key))
+            {
+                customTagMatch = true;
+                string httpStatusValue = spanTags[HttpStatus.Key].First();
+                pointTagsDict[HttpStatus.Key] = httpStatusValue;
+            }
+
             string application = span.GetSingleValuedTagValue(Constants.ApplicationTagKey) ??
                 applicationTags.Application;
             string service = span.GetSingleValuedTagValue(Constants.ServiceTagKey) ??
@@ -460,17 +468,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
             var pointTags = MetricTags.Concat(
                 new MetricTags(OperationNameTag, span.GetOperationName()), pointTagsDict);
-            var errorTags = pointTags;
-
-            // Promote http.status_code to error counter for error spans
-            if (span.IsError() && spanTags.ContainsKey(HttpStatus.Key))
-            {
-                customTagMatch = true;
-                string httpStatusValue = spanTags[HttpStatus.Key].First();
-                pointTagsDict[HttpStatus.Key] = httpStatusValue;
-                errorTags = MetricTags.Concat(errorTags,
-                    new MetricTags(HttpStatus.Key, httpStatusValue));
-            }
 
             // Propagate custom tags to ~component.heartbeat
             if (heartbeaterService != null && customTagMatch)
@@ -489,7 +486,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 metricsRoot.Measure.Counter.Increment(new CounterOptions
                 {
                     Name = metricNamePrefix + ErrorSuffix,
-                    Tags = errorTags
+                    Tags = pointTags
                 });
             }
             long spanDurationMicros = span.GetDurationMicros();

@@ -89,16 +89,13 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
             string operationName = "dummyOp";
             var pointTags = PointTags(operationName, new Dictionary<string, string>
             {
-                { Tags.SpanKind.Key, Constants.NullTagValue }
-            });
-            var errorTags = PointTags(operationName, new Dictionary<string, string>
-            {
                 { Tags.SpanKind.Key, Constants.NullTagValue },
                 { Tags.HttpStatus.Key, "404" }
             });
             var histogramTags = PointTags(operationName, new Dictionary<string, string>
             {
                 { Tags.SpanKind.Key, Constants.NullTagValue },
+                { Tags.HttpStatus.Key, "404" },
                 { "error", "true" }
             });
             var wfSenderMock = new Mock<IWavefrontSender>(MockBehavior.Strict);
@@ -117,7 +114,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Test
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.error.count", 1.0,
                     IsAny<long>(), "source",
-                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, errorTags)));
+                    Is<IDictionary<string, string>>(dict => ContainsPointTags(dict, pointTags)));
             Expression<Action<IWavefrontSender>> sendTotalMillis =
                 sender => sender.SendMetric(
                     "tracing.derived.myApplication.myService.dummyOp.total_time.millis.count",
