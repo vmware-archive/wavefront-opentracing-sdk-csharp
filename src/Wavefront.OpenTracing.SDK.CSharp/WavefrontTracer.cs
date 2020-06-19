@@ -486,12 +486,12 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             if (span.IsError())
             {
                 metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
-                .Builder(metricNamePrefix + ErrorSuffix).Tags(errorTags).Build());
+                    .Builder(metricNamePrefix + ErrorSuffix).Tags(errorTags).Build());
             }
             long spanDurationMicros = span.GetDurationMicros();
             // Convert duration from micros to millis and add to duration counter
             metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
-            .Builder(metricNamePrefix + TotalTimeSuffix).Tags(pointTags).Build(),
+                .Builder(metricNamePrefix + TotalTimeSuffix).Tags(pointTags).Build(),
             spanDurationMicros / 1000);
             // Update histogram with duration in micros
             if (span.IsError())

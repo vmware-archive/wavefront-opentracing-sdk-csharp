@@ -191,7 +191,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 // allow span to be reported if debug is set to true.
                 if (forceSampling == null || !forceSampling.Value)
                 {
-                    if (DebugTagKey.Equals(key) && value.ToString().Equals("true"))
+                    if (DebugTagKey.Equals(key) && value.ToString().ToLower().Equals("true"))
                     {
                         forceSampling = true;
                         spanContext = spanContext.WithSamplingDecision(forceSampling.Value);
