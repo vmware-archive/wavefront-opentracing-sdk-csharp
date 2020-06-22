@@ -447,6 +447,14 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 }
             }
 
+            // Promote http.status_code
+            if (spanTags.ContainsKey(HttpStatus.Key) && !pointTagsDict.ContainsKey(HttpStatus.Key))
+            {
+                customTagMatch = true;
+                string httpStatusValue = spanTags[HttpStatus.Key].First();
+                pointTagsDict[HttpStatus.Key] = httpStatusValue;
+            }
+
             string application = span.GetSingleValuedTagValue(Constants.ApplicationTagKey) ??
                 applicationTags.Application;
             string service = span.GetSingleValuedTagValue(Constants.ServiceTagKey) ??
@@ -460,17 +468,6 @@ namespace Wavefront.OpenTracing.SDK.CSharp
 
             var pointTags = MetricTags.Concat(
                 new MetricTags(OperationNameTag, span.GetOperationName()), pointTagsDict);
-            var errorTags = pointTags;
-
-            // Promote http.status_code to error counter for error spans
-            if (span.IsError() && spanTags.ContainsKey(HttpStatus.Key))
-            {
-                customTagMatch = true;
-                string httpStatusValue = spanTags[HttpStatus.Key].First();
-                pointTagsDict[HttpStatus.Key] = httpStatusValue;
-                errorTags = MetricTags.Concat(errorTags,
-                    new MetricTags(HttpStatus.Key, httpStatusValue));
-            }
 
             // Propagate custom tags to ~component.heartbeat
             if (heartbeaterService != null && customTagMatch)
@@ -486,7 +483,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             if (span.IsError())
             {
                 metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
-                    .Builder(metricNamePrefix + ErrorSuffix).Tags(errorTags).Build());
+                    .Builder(metricNamePrefix + ErrorSuffix).Tags(pointTags).Build());
             }
             long spanDurationMicros = span.GetDurationMicros();
             // Convert duration from micros to millis and add to duration counter
