@@ -476,26 +476,20 @@ namespace Wavefront.OpenTracing.SDK.CSharp
             }
 
             string metricNamePrefix = $"{application}.{service}.{span.GetOperationName()}";
-            metricsRoot.Measure.Counter.Increment(new CounterOptions
-            {
-                Name = metricNamePrefix + InvocationSuffix,
-                Tags = pointTags
-            });
+
+            metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
+                .Builder(metricNamePrefix + InvocationSuffix).Tags(pointTags).Build());
+
             if (span.IsError())
             {
-                metricsRoot.Measure.Counter.Increment(new CounterOptions
-                {
-                    Name = metricNamePrefix + ErrorSuffix,
-                    Tags = pointTags
-                });
+                metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
+                    .Builder(metricNamePrefix + ErrorSuffix).Tags(pointTags).Build());
             }
             long spanDurationMicros = span.GetDurationMicros();
             // Convert duration from micros to millis and add to duration counter
-            metricsRoot.Measure.Counter.Increment(new CounterOptions
-            {
-                Name = metricNamePrefix + TotalTimeSuffix,
-                Tags = pointTags
-            }, spanDurationMicros / 1000);
+            metricsRoot.Measure.Counter.Increment(new DeltaCounterOptions
+                .Builder(metricNamePrefix + TotalTimeSuffix).Tags(pointTags).Build(),
+            spanDurationMicros / 1000);
             // Update histogram with duration in micros
             if (span.IsError())
             {
