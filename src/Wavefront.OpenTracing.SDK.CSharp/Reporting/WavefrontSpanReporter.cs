@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
 using System.Linq;
 using System.Threading.Tasks;
 using Wavefront.SDK.CSharp.Common;
@@ -228,6 +229,8 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             this.sdkMetricsRegistry = sdkMetricsRegistry;
 
             // init internal metrics
+            double sdkVersion = Utils.GetSemVer(Assembly.GetExecutingAssembly());
+            this.sdkMetricsRegistry.Gauge("version", () => sdkVersion);
             this.sdkMetricsRegistry.Gauge("reporter.queue.size", () => spanBuffer.Count);
             this.sdkMetricsRegistry.Gauge("reporter.queue.remaining_capacity",
                 () => spanBuffer.BoundedCapacity - spanBuffer.Count);
