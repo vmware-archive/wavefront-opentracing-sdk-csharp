@@ -14,7 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
     <PackageTags>Wavefront;VMware;opentracing;tracing</PackageTags>
-    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v2.0.0</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v2.1.0</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
   </PropertyGroup>
@@ -28,7 +28,7 @@
     <Folder Include="Sampling\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTracing" Version="2.1.0" />
+    <PackageReference Include="OpenTracing" Version="0.12.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
     <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="3.1.0" />
   </ItemGroup>
