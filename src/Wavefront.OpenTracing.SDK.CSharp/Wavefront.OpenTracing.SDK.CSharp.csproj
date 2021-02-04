@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoWarn>NU1701</NoWarn>
     <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Title>Wavefront by VMware OpenTracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
@@ -28,7 +28,7 @@
     <Folder Include="Sampling\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTracing" Version="0.12.0" />
+    <PackageReference Include="OpenTracing" Version="2.1.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
     <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="3.1.0" />
   </ItemGroup>
