@@ -22,7 +22,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
         private readonly IList<Reference> follows;
         private readonly IList<SpanLog> spanLogs;
 
-        private readonly WavefrontSdkCounter spansDiscarded;
+        private readonly WavefrontSdkDeltaCounter spansDiscarded;
 
         private IList<KeyValuePair<string, string>> tags;
         private IDictionary<string, KeyValuePair<string, string>> singleValuedTags;
@@ -83,7 +83,7 @@ namespace Wavefront.OpenTracing.SDK.CSharp
                 }
             }
 
-            spansDiscarded = tracer.SdkMetricsRegistry?.Counter("spans.discarded");
+            spansDiscarded = tracer.SdkMetricsRegistry?.DeltaCounter("spans.discarded");
         }
 
         /// <inheritdoc />

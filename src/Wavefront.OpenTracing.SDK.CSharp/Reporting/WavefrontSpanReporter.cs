@@ -23,9 +23,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
         private readonly bool reportSpanLogs;
 
         private WavefrontSdkMetricsRegistry sdkMetricsRegistry;
-        private WavefrontSdkCounter spansDropped;
-        private WavefrontSdkCounter spansReceived;
-        private WavefrontSdkCounter reportErrors;
+        private WavefrontSdkDeltaCounter spansDropped;
+        private WavefrontSdkDeltaCounter spansReceived;
+        private WavefrontSdkDeltaCounter reportErrors;
 
         /// <summary>
         ///     Gets the Wavefront proxy or direct ingestion sender.
@@ -234,9 +234,9 @@ namespace Wavefront.OpenTracing.SDK.CSharp.Reporting
             this.sdkMetricsRegistry.Gauge("reporter.queue.size", () => spanBuffer.Count);
             this.sdkMetricsRegistry.Gauge("reporter.queue.remaining_capacity",
                 () => spanBuffer.BoundedCapacity - spanBuffer.Count);
-            spansReceived = this.sdkMetricsRegistry.Counter("reporter.spans.received");
-            spansDropped = this.sdkMetricsRegistry.Counter("reporter.spans.dropped");
-            reportErrors = this.sdkMetricsRegistry.Counter("reporter.errors");
+            spansReceived = this.sdkMetricsRegistry.DeltaCounter("reporter.spans.received");
+            spansDropped = this.sdkMetricsRegistry.DeltaCounter("reporter.spans.dropped");
+            reportErrors = this.sdkMetricsRegistry.DeltaCounter("reporter.errors");
         }
 
         private bool LoggingAllowed()
