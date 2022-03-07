@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">$(TargetFrameworks);net452</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <NoWarn>NU1701</NoWarn>
     <PackageId>Wavefront.OpenTracing.SDK.CSharp</PackageId>
-    <Version>2.1.0</Version>
+    <Version>2.2.0-beta</Version>
     <Title>Wavefront by VMware OpenTracing SDK for C#</Title>
     <Authors>Wavefront</Authors>
     <Description>This package provides OpenTracing support for Wavefront.</Description>
@@ -14,7 +12,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp</RepositoryUrl>
     <PackageTags>Wavefront;VMware;opentracing;tracing</PackageTags>
-    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v2.1.0</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/wavefrontHQ/wavefront-opentracing-sdk-csharp/releases/tag/v2.2.0-beta</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
   </PropertyGroup>
@@ -30,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="OpenTracing" Version="0.12.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="3.1.0" />
+    <PackageReference Include="Wavefront.AppMetrics.SDK.CSharp" Version="3.2.0-beta" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
