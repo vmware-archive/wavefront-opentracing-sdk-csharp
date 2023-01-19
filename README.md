@@ -1,6 +1,11 @@
 # wavefront-opentracing-sdk-csharp 
 [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![travis build status](https://travis-ci.com/wavefrontHQ/wavefront-opentracing-sdk-csharp.svg?branch=master)](https://travis-ci.com/wavefrontHQ/wavefront-opentracing-sdk-csharp) [![NuGet](https://img.shields.io/nuget/v/Wavefront.OpenTracing.SDK.CSharp.svg)](https://www.nuget.org/packages/Wavefront.OpenTracing.SDK.CSharp)
 
+# We are deprecating the repos for OpenTracing and no longer supporting this. Customers can refer to these migration steps to move to OpenTelemetry, 
+# (https://docs.wavefront.com/opentracing_to_opentelemetry_migration.html). Please contact the support team in you have anyquestions 
+# (support@wavefront.com). Thank you.
+
+
 ## Table of Content
 * [Requirements and Installation](#Requirements-and-Installation)
 * [Usage](#Usage)
